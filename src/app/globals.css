@@ -99,29 +99,70 @@ html {
 }
 
 /* Aura Photonic Effect - Hero Section */
-@keyframes aura-pulse {
-  0%, 100% {
-    opacity: 0.3;
-    filter: blur(16px);
-  }
-  50% {
-    opacity: 0.5;
-    filter: blur(20px);
-  }
-}
 
-@keyframes edge-glow {
+/* Primary Halo: Rose Gold "breathing" pulse */
+@keyframes halo-primary-pulse {
   0%, 100% {
     opacity: 0.4;
+    scale: 1;
   }
   50% {
-    opacity: 0.2;
+    opacity: 0.7;
+    scale: 1.05;
   }
 }
 
+/* Secondary Halo: Charcoal depth anchor */
+@keyframes halo-secondary-pulse {
+  0%, 100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* Tertiary Halo: Medical green accent (imperceptible) */
+@keyframes halo-accent-pulse {
+  0%, 100% {
+    opacity: 0.05;
+  }
+  50% {
+    opacity: 0.12;
+  }
+}
+
+/* Light enhancement: Top ambient light effect */
+@keyframes light-ambient {
+  0%, 100% {
+    opacity: 0.12;
+  }
+  50% {
+    opacity: 0.18;
+  }
+}
+
+/* Gradient mask for image dissolution at edges */
+.hero-image-dissolved {
+  -webkit-mask-image: radial-gradient(
+    ellipse 80% 100% at 50% 50%,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.95) 30%,
+    rgba(0, 0, 0, 0.8) 60%,
+    rgba(0, 0, 0, 0.3) 85%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: radial-gradient(
+    ellipse 80% 100% at 50% 50%,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 0.95) 30%,
+    rgba(0, 0, 0, 0.8) 60%,
+    rgba(0, 0, 0, 0.3) 85%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+/* Remove drop shadow - now using integrated halos */
 .hero-photo {
-  filter:
-    drop-shadow(0 0 20px rgba(201, 169, 110, 0.15))
-    drop-shadow(0 0 40px rgba(201, 169, 110, 0.1))
-    drop-shadow(0 12px 40px rgba(0, 0, 0, 0.3));
+  filter: none;
 }

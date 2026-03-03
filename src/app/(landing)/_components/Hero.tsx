@@ -195,35 +195,97 @@ export function Hero() {
           transition={{ duration: 1, delay: 0.5 }}
         >
           <div className="relative w-full max-w-md">
-            {/* Aura glow layer - Photonic effect */}
+            {/* HALO 1: Rose Gold Primary "breathing" pulse */}
             <motion.div
-              className="absolute -inset-12 rounded-[inherit] blur-3xl opacity-0"
+              className="absolute -inset-16 pointer-events-none"
               style={{
                 background:
-                  "radial-gradient(circle at 30% 20%, rgba(201, 169, 110, 0.4) 0%, transparent 70%)",
-                zIndex: -1,
+                  "radial-gradient(circle at 40% 20%, rgba(201, 169, 110, 0.6) 0%, transparent 70%)",
+                filter: "blur(40px)",
+                zIndex: -2,
               }}
               animate={{
-                opacity: [0.3, 0.6, 0.3],
+                opacity: [0.4, 0.7, 0.4],
+                scale: [1, 1.05, 1],
               }}
               transition={{
-                duration: 4,
+                duration: 5,
                 repeat: Infinity,
                 repeatType: "reverse",
                 ease: "easeInOut",
               }}
             />
 
-            {/* Decorative gold ring behind photo */}
+            {/* HALO 2: Charcoal Blue depth anchor */}
             <motion.div
-              className="absolute -top-6 -right-6 w-full h-full rounded-full border-2 border-accent-gold/20"
-              animate={{ rotate: [0, 360] }}
-              transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+              className="absolute -inset-24 pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(circle at 50% 30%, rgba(31, 41, 55, 0.3) 0%, transparent 60%)",
+                filter: "blur(60px)",
+                zIndex: -1,
+              }}
+              animate={{
+                opacity: [0.15, 0.3, 0.15],
+              }}
+              transition={{
+                duration: 4.5,
+                repeat: Infinity,
+                repeatType: "reverse",
+                ease: "easeInOut",
+                delay: 2.25,
+              }}
             />
-            {/* Photo container with gradient mask at bottom */}
-            <div
-              className="relative aspect-[3/4] rounded-[var(--radius-xl)] overflow-hidden hero-photo"
-            >
+
+            {/* HALO 3: Medical Green accent (imperceptible) */}
+            <motion.div
+              className="absolute -inset-20 pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(ellipse 150% 80% at 50% 60%, rgba(123, 166, 140, 0.15) 0%, transparent 70%)",
+                filter: "blur(80px)",
+                zIndex: -1,
+              }}
+              animate={{
+                opacity: [0.05, 0.12, 0.05],
+              }}
+              transition={{
+                duration: 6,
+                repeat: Infinity,
+                repeatType: "reverse",
+                ease: "easeInOut",
+                delay: 1,
+              }}
+            />
+
+            {/* LIGHT ENHANCEMENT: Top ambient light */}
+            <motion.div
+              className="absolute -top-12 left-1/2 -translate-x-1/2 pointer-events-none"
+              style={{
+                width: "150%",
+                height: "40%",
+                background:
+                  "radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.2) 0%, transparent 70%)",
+                filter: "blur(80px)",
+                mixBlendMode: "screen",
+                zIndex: -3,
+              }}
+            />
+
+            {/* LIGHT ENHANCEMENT: Edge glow (lateral rim light) */}
+            <motion.div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background:
+                  "radial-gradient(ellipse 100% 100% at 0% 50%, rgba(201, 169, 110, 0.1) 0%, transparent 50%)",
+                filter: "blur(40px)",
+                mixBlendMode: "overlay",
+                zIndex: -2,
+              }}
+            />
+
+            {/* Photo container with gradient mask dissolution */}
+            <div className="relative aspect-[3/4] overflow-hidden hero-photo hero-image-dissolved">
               <Image
                 src="/hero-dalila.png"
                 alt="Dra. Dalila Lucena — Medicina de Performance e Longevidade"
@@ -234,24 +296,6 @@ export function Hero() {
               />
               {/* Bottom fade-to-transparent gradient */}
               <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#1a1a2e] to-transparent" />
-
-              {/* Edges glow layer - Photonic enhancement */}
-              <motion.div
-                className="absolute inset-0 rounded-[var(--radius-xl)] pointer-events-none"
-                style={{
-                  background:
-                    "radial-gradient(ellipse at 50% 0%, rgba(212, 188, 142, 0.15) 0%, transparent 50%)",
-                }}
-                animate={{
-                  opacity: [0.4, 0.2, 0.4],
-                }}
-                transition={{
-                  duration: 3,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                  ease: "easeInOut",
-                }}
-              />
             </div>
           </div>
         </motion.div>
