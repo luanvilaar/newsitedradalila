@@ -6,7 +6,10 @@ import { NextResponse } from "next/server";
  * POST: Create a new patient (admin only)
  */
 
-async function isAdmin(supabase: any, userId: string): Promise<boolean> {
+async function isAdmin(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string
+): Promise<boolean> {
   const { data } = await supabase
     .from("profiles")
     .select("role")
@@ -99,13 +102,43 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { full_name, phone, cpf, email, password, address, emergency_contact, insurance_info } = body;
+    const {
+      full_name,
+      phone,
+      cpf,
+      email,
+      password,
+      address,
+      emergency_contact,
+      insurance_info,
+    } = body;
+
+    if (
+      !full_name ||
+      !cpf ||
+      !address?.street ||
+      !address?.number ||
+      !address?.city ||
+      !address?.state ||
+      !address?.zip ||
+      !phone ||
+      !email ||
+      !password
+    ) {
+      return NextResponse.json(
+        {
+          error:
+            "Nome, CPF, endereço completo, telefone, email e senha são obrigatórios.",
+        },
+        { status: 400 }
+      );
+    }
 
     // Create auth user
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
-      email_confirm: true,
+      email_confirm: false,
     });
 
     if (authError) {
@@ -138,7 +171,15 @@ export async function POST(request: Request) {
       .from("patients")
       .insert({
         id: authData.user.id,
-        address,
+        address: {
+          street: address.street,
+          number: address.number,
+          complement: address.complement || null,
+          neighborhood: address.neighborhood,
+          city: address.city,
+          state: address.state,
+          zip: address.zip,
+        },
         emergency_contact,
         insurance_info,
       })
@@ -152,7 +193,25 @@ export async function POST(request: Request) {
       );
     }
 
-    return NextResponse.json(patient, { status: 201 });
+    const { error: resetPasswordError } = await supabase.auth.resetPasswordForEmail(
+      email
+    );
+
+    if (resetPasswordError) {
+      console.warn(
+        "Patient created, but password reset guidance email failed:",
+        resetPasswordError.message
+      );
+    }
+
+    return NextResponse.json(
+      {
+        patient,
+        message:
+          "Paciente cadastrado. Email de confirmação e orientação para troca de senha enviado.",
+      },
+      { status: 201 }
+    );
   } catch (error) {
     console.error("Error creating patient:", error);
     return NextResponse.json(
