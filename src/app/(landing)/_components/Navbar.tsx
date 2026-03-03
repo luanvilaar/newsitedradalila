@@ -43,11 +43,11 @@ export function Navbar() {
             )}
             priority
           />
-          {/* Transparent state: text fallback for logo on dark bg */}
+          {/* Transparent state: text fallback for logo */}
           <h1
             className={cn(
               "font-heading text-xl tracking-widest transition-all duration-300",
-              scrolled ? "opacity-0 absolute" : "opacity-100 text-white"
+              scrolled ? "opacity-0 absolute" : "opacity-100 text-accent-dark"
             )}
           >
             DALILA LUCENA
@@ -65,12 +65,7 @@ export function Navbar() {
             <a
               key={item.href}
               href={item.href}
-              className={cn(
-                "text-sm font-medium transition-colors duration-300",
-                scrolled
-                  ? "text-text-secondary hover:text-accent-gold"
-                  : "text-white/80 hover:text-white"
-              )}
+              className="text-sm font-medium transition-colors duration-300 text-text-secondary hover:text-accent-gold"
             >
               {item.label}
             </a>
@@ -81,7 +76,7 @@ export function Navbar() {
               "text-sm font-medium px-5 py-2 rounded-[var(--radius-full)] transition-all duration-300",
               scrolled
                 ? "bg-accent-gold text-white hover:bg-accent-gold-dark"
-                : "border border-white/30 text-white hover:bg-white/10"
+                : "border border-accent-dark/20 text-accent-dark hover:bg-accent-dark/5"
             )}
           >
             Área do Paciente
@@ -91,10 +86,7 @@ export function Navbar() {
         {/* Mobile Menu Button */}
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
-          className={cn(
-            "md:hidden p-2 cursor-pointer",
-            scrolled ? "text-accent-dark" : "text-white"
-          )}
+          className="md:hidden p-2 cursor-pointer text-accent-dark"
         >
           {mobileOpen ? <X size={24} /> : <Menu size={24} />}
         </button>

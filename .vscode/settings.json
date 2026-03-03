@@ -6,6 +6,7 @@
         "/^npm run 2>&1 \\| grep -E \"\\^\\\\s\\+\\(dev\\|build\\|lint\\)\"$/": {
             "approve": true,
             "matchCommandLine": true
-        }
+        },
+        "pkill": true
     }
 }

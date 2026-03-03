@@ -5,9 +5,10 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
-import { ArrowLeft, Save, Calculator } from "lucide-react";
+import { ArrowLeft, Save, Calculator, CheckCircle, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { PdfUploadBioimpedance } from "@/components/bioimpedance/PdfUpload";
 
 export default function BioimpedanciaAdminPage() {
   const params = useParams();
@@ -28,13 +29,18 @@ export default function BioimpedanciaAdminPage() {
     notes: "",
   });
 
-  function updateField(field: string, value: string) {
-    const newForm = { ...form, [field]: value };
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  function updateField(field: string, value: string | number) {
+    const valueStr = String(value);
+    const newForm = { ...form, [field]: valueStr };
 
     // Auto-calculate BMI
     if (field === "weight" || field === "height") {
-      const weight = parseFloat(field === "weight" ? value : newForm.weight);
-      const height = parseFloat(field === "height" ? value : newForm.height);
+      const weight = parseFloat(field === "weight" ? valueStr : newForm.weight);
+      const height = parseFloat(field === "height" ? valueStr : newForm.height);
       if (weight > 0 && height > 0) {
         const heightInMeters = height / 100;
         const bmi = weight / (heightInMeters * heightInMeters);
@@ -45,9 +51,77 @@ export default function BioimpedanciaAdminPage() {
     setForm(newForm);
   }
 
-  function handleSave() {
-    // TODO: Save to Supabase
-    console.log("Saving bioimpedance:", form);
+  function handlePdfDataExtracted(extractedData: any) {
+    // Update form with extracted data
+    Object.entries(extractedData).forEach(([key, value]) => {
+      if (value !== null && value !== undefined && key in form) {
+        // Only update if value is a string or number
+        if (typeof value === "string" || typeof value === "number") {
+          updateField(key, value);
+        }
+      }
+    });
+  }
+
+  async function handleSave() {
+    if (!form.weight) {
+      setError("Peso é obrigatório");
+      return;
+    }
+
+    if (!form.measurement_date) {
+      setError("Data da medição é obrigatória");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const response = await fetch(
+        `/api/patients/${patientId}/bioimpedance/save`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(form),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Erro ao salvar bioimpedância");
+      }
+
+      setSuccess(result.message || "Bioimpedância salva com sucesso!");
+      // Reset form after 2 seconds
+      setTimeout(() => {
+        setForm({
+          weight: "",
+          height: "",
+          bmi: "",
+          body_fat_percentage: "",
+          muscle_mass: "",
+          bone_mass: "",
+          visceral_fat: "",
+          water_percentage: "",
+          basal_metabolic_rate: "",
+          metabolic_age: "",
+          measurement_date: new Date().toISOString().split("T")[0],
+          notes: "",
+        });
+        setSuccess(null);
+      }, 2000);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Erro desconhecido";
+      setError(message);
+      console.error("Save error:", err);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
@@ -68,6 +142,15 @@ export default function BioimpedanciaAdminPage() {
           </p>
         </div>
       </div>
+
+      {/* PDF Upload Section */}
+      <Card className="mb-6">
+        <PdfUploadBioimpedance
+          patientId={patientId}
+          onDataExtracted={handlePdfDataExtracted}
+          isLoading={isLoading}
+        />
+      </Card>
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Measures */}
@@ -216,11 +299,32 @@ export default function BioimpedanciaAdminPage() {
       </div>
 
       {/* Save */}
-      <div className="flex justify-end mt-6">
-        <Button variant="premium" onClick={handleSave} className="gap-2">
-          <Save size={16} />
-          Salvar Registro
-        </Button>
+      <div className="flex flex-col gap-4 mt-6">
+        {error && (
+          <div className="flex items-start gap-3 p-4 rounded-lg bg-red-50 border border-red-200">
+            <AlertCircle size={18} className="text-red-600 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        )}
+
+        {success && (
+          <div className="flex items-start gap-3 p-4 rounded-lg bg-green-50 border border-green-200">
+            <CheckCircle size={18} className="text-green-600 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-green-700">{success}</p>
+          </div>
+        )}
+
+        <div className="flex justify-end">
+          <Button
+            variant="premium"
+            onClick={handleSave}
+            className="gap-2"
+            disabled={isLoading}
+          >
+            <Save size={16} />
+            {isLoading ? "Salvando..." : "Salvar Registro"}
+          </Button>
+        </div>
       </div>
     </div>
   );
