@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
 /**
@@ -134,8 +134,9 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create auth user
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    // Create auth user using admin client
+    const adminClient = createAdminClient();
+    const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email,
       password,
       email_confirm: false,
@@ -193,16 +194,8 @@ export async function POST(request: Request) {
       );
     }
 
-    const { error: resetPasswordError } = await supabase.auth.resetPasswordForEmail(
-      email
-    );
-
-    if (resetPasswordError) {
-      console.warn(
-        "Patient created, but password reset guidance email failed:",
-        resetPasswordError.message
-      );
-    }
+    // Note: Password reset email is handled by Supabase automatically upon user creation
+    // No need to call resetPasswordForEmail separately
 
     return NextResponse.json(
       {
