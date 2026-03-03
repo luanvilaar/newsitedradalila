@@ -64,10 +64,23 @@ export function PremiumCTA() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.6 }}
+          className="relative inline-block"
         >
-          <Button variant="premium" size="lg" className="min-w-[260px] text-lg">
-            Agendar Consulta
-          </Button>
+          {/* Glow effect on hover */}
+          <motion.div
+            className="absolute -inset-3 bg-gradient-to-r from-accent-gold/0 via-accent-gold/30 to-accent-gold/0 rounded-full blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+            whileHover={{ opacity: 1 }}
+          />
+
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.2 }}
+            className="group relative"
+          >
+            <Button variant="premium" size="lg" className="min-w-[260px] text-lg relative z-10">
+              Agendar Consulta
+            </Button>
+          </motion.div>
         </motion.div>
       </div>
     </section>

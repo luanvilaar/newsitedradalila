@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils/cn";
 import Image from "next/image";
@@ -10,6 +11,7 @@ import { Menu, X } from "lucide-react";
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const pathname = usePathname();
 
   useEffect(() => {
     function handleScroll() {
@@ -18,6 +20,10 @@ export function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const isActive = (href: string) => {
+    return pathname === href;
+  };
 
   return (
     <header
@@ -65,18 +71,21 @@ export function Navbar() {
             <a
               key={item.href}
               href={item.href}
-              className="text-sm font-medium transition-colors duration-300 text-text-secondary hover:text-accent-gold"
+              className="text-sm font-medium transition-colors duration-300 text-text-secondary hover:text-accent-gold relative group"
             >
               {item.label}
+              <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-accent-gold group-hover:w-full transition-all duration-300" />
             </a>
           ))}
           <Link
             href="/login"
             className={cn(
-              "text-sm font-medium px-5 py-2 rounded-[var(--radius-full)] transition-all duration-300",
-              scrolled
-                ? "bg-accent-gold text-white hover:bg-accent-gold-dark"
-                : "border border-accent-dark/20 text-accent-dark hover:bg-accent-dark/5"
+              "text-sm font-medium px-5 py-2 rounded-[var(--radius-full)] transition-all duration-300 relative group",
+              isActive("/login")
+                ? "bg-accent-gold text-white shadow-[0_4px_12px_rgba(184,156,100,0.3)]"
+                : scrolled
+                  ? "bg-accent-gold/80 text-white hover:bg-accent-gold hover:shadow-[0_4px_12px_rgba(184,156,100,0.3)]"
+                  : "border border-accent-dark/20 text-accent-dark hover:bg-accent-dark/5 hover:border-accent-gold"
             )}
           >
             Área do Paciente
@@ -112,15 +121,21 @@ export function Navbar() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileOpen(false)}
-                  className="text-text-secondary hover:text-accent-gold py-3 px-4 rounded-[var(--radius-md)] hover:bg-surface transition-colors text-sm font-medium"
+                  className="text-text-secondary hover:text-accent-gold py-3 px-4 rounded-[var(--radius-md)] hover:bg-accent-gold/5 transition-colors text-sm font-medium relative group"
                 >
                   {item.label}
+                  <span className="absolute left-4 bottom-0 h-0.5 bg-accent-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300 w-12" />
                 </a>
               ))}
               <Link
                 href="/login"
                 onClick={() => setMobileOpen(false)}
-                className="mt-2 text-center bg-accent-gold text-white py-3 px-4 rounded-[var(--radius-md)] text-sm font-medium hover:bg-accent-gold-dark transition-colors"
+                className={cn(
+                  "mt-2 text-center py-3 px-4 rounded-[var(--radius-md)] text-sm font-medium transition-all duration-300",
+                  isActive("/login")
+                    ? "bg-accent-gold text-white shadow-[0_4px_12px_rgba(184,156,100,0.3)]"
+                    : "bg-accent-gold/80 text-white hover:bg-accent-gold hover:shadow-[0_4px_12px_rgba(184,156,100,0.3)]"
+                )}
               >
                 Área do Paciente
               </Link>

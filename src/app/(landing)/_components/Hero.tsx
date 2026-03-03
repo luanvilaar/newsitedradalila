@@ -77,11 +77,11 @@ export function Hero() {
             <Button variant="premium" size="lg" className="min-w-[220px]">
               Agendar Consulta
             </Button>
-            <Link href="/login">
+            <Link href="/login" className="group">
               <Button
                 variant="outline"
                 size="lg"
-                className="min-w-[220px] border-accent-dark/20 text-accent-dark hover:bg-accent-dark/5 hover:text-accent-dark"
+                className="min-w-[220px] border-accent-dark/20 text-accent-dark group-hover:border-accent-gold group-hover:bg-accent-gold/10 group-hover:text-accent-gold transition-all duration-300"
               >
                 Área do Paciente
               </Button>

@@ -4,7 +4,7 @@ import { Instagram } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="bg-white border-t border-border-light py-12 px-4">
+    <footer className="bg-white border-t-2 border-accent-gold/20 py-12 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="grid md:grid-cols-3 gap-8 mb-8">
           {/* Brand */}
@@ -31,7 +31,7 @@ export function Footer() {
               <li>
                 <Link
                   href="/login"
-                  className="text-sm text-text-secondary hover:text-accent-gold transition-colors"
+                  className="text-sm text-text-secondary hover:text-accent-gold hover:underline transition-all duration-300"
                 >
                   Área do Paciente
                 </Link>
@@ -39,7 +39,7 @@ export function Footer() {
               <li>
                 <a
                   href="#especialidades"
-                  className="text-sm text-text-secondary hover:text-accent-gold transition-colors"
+                  className="text-sm text-text-secondary hover:text-accent-gold hover:underline transition-all duration-300"
                 >
                   Especialidades
                 </a>
@@ -47,7 +47,7 @@ export function Footer() {
               <li>
                 <a
                   href="#locais"
-                  className="text-sm text-text-secondary hover:text-accent-gold transition-colors"
+                  className="text-sm text-text-secondary hover:text-accent-gold hover:underline transition-all duration-300"
                 >
                   Locais de Atendimento
                 </a>
