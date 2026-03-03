@@ -136,7 +136,7 @@ export function Authority() {
                 {/* Image */}
                 <Image
                   src="/congress-nutrologia-2022.png"
-                  alt="Congresso Brasileiro de Nutrologia 2022 - ABRAN"
+                  alt="Dra. Dalila Lucena no Congresso Brasileiro de Nutrologia 2022 - ABRAN, apresentando pesquisa em nutrologia clínica e performance médica"
                   fill
                   className="object-cover group-hover:scale-110 transition-transform duration-700"
                   sizes="(max-width: 768px) 40vw, 20vw"
@@ -178,7 +178,7 @@ export function Authority() {
                 {/* Image */}
                 <Image
                   src="/sports-medicine-dalila.png"
-                  alt="Dra. Dalila Lucena - Medicina do Esporte e Performance"
+                  alt="Dra. Dalila Lucena em ambiente clínico - Especialista em Medicina do Esporte, Performance e Longevidade com abordagem científica personalizada"
                   fill
                   className="object-cover group-hover:scale-110 transition-transform duration-700"
                   sizes="(max-width: 768px) 40vw, 20vw"

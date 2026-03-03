@@ -58,7 +58,7 @@ export function SpecialtiesSlider() {
             <div className="relative w-full h-full border-2 border-accent-gold/50 rounded-[var(--radius-xl)] overflow-hidden shadow-[0_12px_32px_rgba(184,156,100,0.2)]">
               <Image
                 src="/specializations-dalila.png"
-                alt="Dra. Dalila Lucena em conferência médica sobre especialidades"
+                alt="Dra. Dalila Lucena apresentando em conferência médica - Especialidades em Nutrologia, Medicina Esportiva, Performance e Longevidade"
                 fill
                 className="object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 sizes="(max-width: 768px) 0vw, 50vw"

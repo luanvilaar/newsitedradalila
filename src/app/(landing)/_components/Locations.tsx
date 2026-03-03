@@ -41,15 +41,15 @@ export function Locations() {
           {locations.map((location, index) => (
             <motion.div
               key={location.city}
-              className="relative bg-white rounded-[var(--radius-xl)] p-8 md:p-10 border border-border-light
-                shadow-[var(--shadow-card)] overflow-hidden group"
+              className="relative bg-white rounded-[var(--radius-xl)] p-8 md:p-10 border border-accent-gold/20
+                shadow-[var(--shadow-md)] overflow-hidden group transition-all duration-300 cursor-pointer
+                hover:border-accent-gold/40 hover:shadow-[var(--shadow-lg)]"
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.2 }}
               whileHover={{
-                y: -4,
-                boxShadow: "var(--shadow-hover)",
+                y: -6,
                 transition: { duration: 0.3 },
               }}
             >
@@ -101,25 +101,40 @@ export function Locations() {
 
               <div className="relative z-10">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-accent-gold/10 flex items-center justify-center">
-                    <MapPin size={20} className="text-accent-gold" />
-                  </div>
+                  <motion.div
+                    className="w-10 h-10 rounded-full bg-accent-gold/10 flex items-center justify-center group-hover:bg-accent-gold/20 transition-colors duration-300"
+                    whileHover={{ scale: 1.15, rotate: 10 }}
+                  >
+                    <MapPin size={20} className="text-accent-gold group-hover:scale-125 transition-transform duration-300" />
+                  </motion.div>
                   <div>
-                    <h3 className="font-heading text-2xl text-accent-dark tracking-wide">
+                    <h3 className="font-heading text-2xl text-accent-dark tracking-wide group-hover:text-accent-gold transition-colors duration-300">
                       {location.city.toUpperCase()}
                     </h3>
                     <p className="text-xs text-text-muted">{location.state}</p>
                   </div>
                 </div>
 
-                <p className="text-text-secondary text-sm leading-relaxed mb-6">
+                <p className="text-text-secondary text-sm leading-relaxed mb-6 group-hover:text-text-primary transition-colors duration-300">
                   {location.description}
                 </p>
 
-                <div className="flex items-center gap-2 text-sm text-accent-gold group-hover:text-accent-gold-dark transition-colors">
+                {/* Decorative line - appears on hover */}
+                <motion.div
+                  className="h-1 bg-gradient-to-r from-accent-gold to-transparent rounded-full mb-4"
+                  initial={{ scaleX: 0 }}
+                  whileHover={{ scaleX: 1 }}
+                  transition={{ duration: 0.3 }}
+                  style={{ originX: 0 }}
+                />
+
+                <motion.div
+                  className="flex items-center gap-2 text-sm text-accent-gold group-hover:text-accent-gold-dark transition-colors cursor-pointer"
+                  whileHover={{ x: 4 }}
+                >
                   <Phone size={14} />
                   <span>Agendar consulta</span>
-                </div>
+                </motion.div>
               </div>
             </motion.div>
           ))}
