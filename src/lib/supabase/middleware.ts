@@ -63,22 +63,35 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Role-based access control
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", user.id)
     .single();
 
-  if (pathname.startsWith("/admin") && profile?.role !== "admin") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/paciente";
-    return NextResponse.redirect(url);
+  // If profile fetch fails, allow access (don't block with infinite redirects)
+  if (profileError) {
+    console.error("Profile fetch error:", profileError);
+    return response;
   }
 
-  if (pathname.startsWith("/paciente") && profile?.role !== "patient") {
-    const url = request.nextUrl.clone();
-    url.pathname = "/admin";
-    return NextResponse.redirect(url);
+  const userRole = profile?.role;
+
+  // Only redirect if accessing wrong dashboard
+  if (pathname.startsWith("/admin")) {
+    // Admin dashboard - only admins allowed
+    if (userRole !== "admin") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/paciente";
+      return NextResponse.redirect(url);
+    }
+  } else if (pathname.startsWith("/paciente")) {
+    // Patient dashboard - only patients allowed
+    if (userRole !== "patient") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin";
+      return NextResponse.redirect(url);
+    }
   }
 
   return response;

@@ -19,39 +19,66 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const supabase = createClient();
+    try {
+      const supabase = createClient();
 
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+      // Sign in with email and password
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (authError) {
-      setError("Email ou senha incorretos.");
-      setLoading(false);
-      return;
-    }
+      if (authError) {
+        setError("Email ou senha incorretos.");
+        setLoading(false);
+        return;
+      }
 
-    // Get user role to redirect
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+      // Get current user
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-    if (user) {
-      const { data: profile } = await supabase
+      if (userError || !user) {
+        setError("Erro ao obter dados do usuário.");
+        setLoading(false);
+        return;
+      }
+
+      // Get user profile with role
+      const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", user.id)
         .single();
 
-      if (profile?.role === "admin") {
-        router.push("/admin");
-      } else {
-        router.push("/paciente");
+      if (profileError) {
+        console.error("Profile error:", profileError);
+        setError("Erro ao carregar perfil do usuário.");
+        setLoading(false);
+        return;
       }
-    }
 
-    router.refresh();
+      // Redirect based on role
+      if (profile?.role === "admin") {
+        // Force a refresh to ensure session is established
+        router.refresh();
+        // Use replace to avoid back button issues
+        router.replace("/admin");
+      } else if (profile?.role === "patient") {
+        router.refresh();
+        router.replace("/paciente");
+      } else {
+        setError("Tipo de usuário não reconhecido.");
+        setLoading(false);
+        return;
+      }
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Erro ao fazer login. Tente novamente.");
+      setLoading(false);
+    }
   }
 
   return (
