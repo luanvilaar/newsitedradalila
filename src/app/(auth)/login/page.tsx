@@ -55,6 +55,50 @@ export default function LoginPage() {
 
       if (profileError) {
         console.error("Profile error:", profileError);
+
+        // Profile doesn't exist - try to create it
+        if (profileError.code === "PGRST116") {
+          try {
+            // Call sync-profile endpoint to create missing profile
+            const syncResponse = await fetch("/api/auth/sync-profile", {
+              method: "POST",
+            });
+
+            if (syncResponse.ok) {
+              // Profile created successfully, try to proceed
+              const syncData = await syncResponse.json();
+              console.log("Profile synced:", syncData);
+
+              // Retry fetching the profile
+              const { data: newProfile, error: retryError } = await supabase
+                .from("profiles")
+                .select("role")
+                .eq("id", user.id)
+                .single();
+
+              if (retryError) {
+                setError(
+                  "Perfil não encontrado. Entre em contato com o suporte."
+                );
+                setLoading(false);
+                return;
+              }
+
+              // Use the newly created profile
+              if (newProfile?.role === "admin") {
+                router.refresh();
+                router.replace("/admin");
+              } else {
+                router.refresh();
+                router.replace("/paciente");
+              }
+              return;
+            }
+          } catch (syncErr) {
+            console.error("Sync profile failed:", syncErr);
+          }
+        }
+
         setError("Erro ao carregar perfil do usuário.");
         setLoading(false);
         return;
