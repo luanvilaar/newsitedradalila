@@ -75,14 +75,25 @@ export function SpecialtiesSlider() {
         </motion.div>
       </div>
 
-      {/* Horizontal Slider */}
-      <div className="relative">
+      {/* Horizontal Slider - Premium Design */}
+      <div className="relative overflow-hidden group">
+        {/* Gradient mask left (hidden indicator) */}
+        <div className="absolute left-0 top-0 bottom-0 w-12 md:w-16 bg-gradient-to-r from-surface via-surface/50 to-transparent pointer-events-none z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
+        {/* Gradient mask right (hidden indicator) */}
+        <div className="absolute right-0 top-0 bottom-0 w-12 md:w-16 bg-gradient-to-l from-surface via-surface/50 to-transparent pointer-events-none z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
         <motion.div
           ref={containerRef}
-          className="flex gap-6 px-4 md:px-8 cursor-grab active:cursor-grabbing"
+          className="flex gap-6 cursor-grab active:cursor-grabbing"
           drag="x"
           dragConstraints={containerRef}
-          style={{ paddingLeft: "max(1rem, calc((100vw - 72rem) / 2))" }}
+          style={{
+            paddingLeft: "max(1rem, calc((100vw - 72rem) / 2))",
+            paddingRight: "max(1rem, calc((100vw - 72rem) / 2))",
+            paddingTop: "0.5rem",
+            paddingBottom: "0.5rem",
+          }}
         >
           {SPECIALTIES.map((specialty, index) => {
             const Icon = iconMap[specialty.icon];
