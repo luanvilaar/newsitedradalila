@@ -92,84 +92,117 @@ export function Authority() {
               </p>
             </div>
 
-            {/* Credentials Badges */}
-            <div className="flex flex-wrap gap-3 pt-2">
+            {/* Credentials Badges - Premium Design */}
+            <div className="flex flex-wrap gap-3 pt-4">
               {[
                 "Nutrologia",
                 "Medicina Esportiva",
                 "Performance",
                 "Longevidade",
-              ].map((credential) => (
+              ].map((credential, index) => (
                 <motion.span
                   key={credential}
-                  className="px-4 py-2 bg-gradient-to-br from-accent-gold/5 to-accent-dark/5 text-text-secondary text-sm rounded-[var(--radius-full)] border border-accent-gold/30 hover:border-accent-gold/60 hover:bg-accent-gold/10 transition-all duration-300"
-                  whileHover={{ scale: 1.05 }}
+                  className="px-5 py-3 bg-gradient-to-br from-accent-gold/10 to-accent-dark/5 text-text-secondary text-sm font-medium rounded-[var(--radius-full)]
+                    border border-accent-gold/40 shadow-[0_4px_12px_rgba(184,156,100,0.08)]
+                    hover:border-accent-gold/70 hover:shadow-[0_8px_20px_rgba(184,156,100,0.15)]
+                    hover:bg-accent-gold/15 transition-all duration-300 group"
+                  whileHover={{ scale: 1.08, y: -2 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: index * 0.08 }}
                 >
-                  {credential}
+                  <span className="relative z-10">{credential}</span>
+                  {/* Subtle shimmer effect on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-0 group-hover:opacity-20 transition-opacity duration-300 rounded-[var(--radius-full)]" />
                 </motion.span>
               ))}
             </div>
 
-            {/* Credential Photos Grid */}
-            <div className="mt-10 grid grid-cols-2 gap-4 pt-4">
+            {/* Credential Photos Grid - Premium Design */}
+            <div className="mt-12 grid grid-cols-2 gap-6 pt-4">
+              {/* Card 1: Congress */}
               <motion.div
-                className="relative aspect-square rounded-[var(--radius-lg)] overflow-hidden group cursor-pointer"
-                initial={{ opacity: 0, scale: 0.9 }}
+                className="relative aspect-square rounded-[var(--radius-xl)] overflow-hidden group cursor-pointer"
+                initial={{ opacity: 0, scale: 0.85 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.4 }}
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.05, y: -6 }}
               >
+                {/* Decorative glow */}
+                <div className="absolute -inset-4 bg-gradient-to-br from-accent-gold/20 via-accent-dark/5 to-transparent -z-10 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                {/* Image */}
                 <Image
                   src="/congress-nutrologia-2022.png"
                   alt="Congresso Brasileiro de Nutrologia 2022 - ABRAN"
                   fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="object-cover group-hover:scale-110 transition-transform duration-700"
                   sizes="(max-width: 768px) 40vw, 20vw"
                 />
 
-                {/* Overlay with brand colors - using multiply blend mode */}
-                <div className="absolute inset-0 bg-gradient-to-t from-accent-dark/70 via-accent-dark/20 to-transparent mix-blend-multiply" />
+                {/* Dual overlays with blend modes */}
+                <div className="absolute inset-0 bg-gradient-to-t from-accent-dark/75 via-accent-dark/25 to-transparent mix-blend-multiply" />
+                <div className="absolute inset-0 bg-gradient-to-b from-accent-gold/12 to-transparent mix-blend-overlay pointer-events-none" />
 
-                {/* Additional warm overlay for premium feel */}
-                <div className="absolute inset-0 bg-gradient-to-b from-accent-gold/10 to-transparent mix-blend-overlay pointer-events-none" />
+                {/* Premium border */}
+                <div className="absolute inset-0 border-2 border-accent-gold/40 rounded-[var(--radius-xl)] group-hover:border-accent-gold/70 transition-colors duration-300" />
 
-                {/* Border highlight */}
-                <div className="absolute inset-0 border border-accent-gold/30 rounded-[var(--radius-lg)]" />
+                {/* Content overlay */}
+                <div className="absolute inset-0 flex flex-col justify-end p-4 bg-gradient-to-t from-black/60 via-transparent to-transparent">
+                  <p className="text-white text-sm font-semibold leading-tight drop-shadow-lg">
+                    Congresso Brasileiro de Nutrologia
+                  </p>
+                  <p className="text-accent-gold text-xs mt-1 drop-shadow-lg">ABRAN 2022</p>
+                </div>
 
-                <p className="absolute bottom-3 left-3 right-3 text-white text-xs font-medium leading-tight drop-shadow-lg">
-                  Congresso Brasileiro de Nutrologia — ABRAN 2022
-                </p>
+                {/* Decorative badge */}
+                <div className="absolute top-3 right-3 w-8 h-8 rounded-[var(--radius-md)] bg-accent-gold/20 border border-accent-gold/50 flex items-center justify-center backdrop-blur-sm group-hover:bg-accent-gold/30 transition-colors duration-300">
+                  <span className="text-xs font-bold text-accent-gold">★</span>
+                </div>
               </motion.div>
 
+              {/* Card 2: Sports Medicine */}
               <motion.div
-                className="relative aspect-square rounded-[var(--radius-lg)] overflow-hidden group cursor-pointer"
-                initial={{ opacity: 0, scale: 0.9 }}
+                className="relative aspect-square rounded-[var(--radius-xl)] overflow-hidden group cursor-pointer"
+                initial={{ opacity: 0, scale: 0.85 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.5 }}
-                whileHover={{ scale: 1.02 }}
+                whileHover={{ scale: 1.05, y: -6 }}
               >
+                {/* Decorative glow */}
+                <div className="absolute -inset-4 bg-gradient-to-br from-accent-gold/20 via-accent-dark/5 to-transparent -z-10 blur-lg opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+
+                {/* Image */}
                 <Image
                   src="/sports-medicine-dalila.png"
                   alt="Dra. Dalila Lucena - Medicina do Esporte e Performance"
                   fill
-                  className="object-cover group-hover:scale-105 transition-transform duration-500"
+                  className="object-cover group-hover:scale-110 transition-transform duration-700"
                   sizes="(max-width: 768px) 40vw, 20vw"
                 />
 
-                {/* Overlay with brand colors - using screen blend mode for lighter effect */}
-                <div className="absolute inset-0 bg-gradient-to-t from-accent-dark/60 via-accent-dark/10 to-transparent mix-blend-multiply" />
-
-                {/* Warm tone overlay */}
+                {/* Dual overlays with blend modes */}
+                <div className="absolute inset-0 bg-gradient-to-t from-accent-dark/70 via-accent-dark/15 to-transparent mix-blend-multiply" />
                 <div className="absolute inset-0 bg-gradient-to-b from-accent-gold/15 to-transparent mix-blend-screen pointer-events-none" />
 
-                {/* Border highlight */}
-                <div className="absolute inset-0 border border-accent-gold/30 rounded-[var(--radius-lg)]" />
+                {/* Premium border */}
+                <div className="absolute inset-0 border-2 border-accent-gold/40 rounded-[var(--radius-xl)] group-hover:border-accent-gold/70 transition-colors duration-300" />
 
-                <p className="absolute bottom-3 left-3 right-3 text-white text-xs font-medium leading-tight drop-shadow-lg">
-                  Medicina do Esporte e Performance
-                </p>
+                {/* Content overlay */}
+                <div className="absolute inset-0 flex flex-col justify-end p-4 bg-gradient-to-t from-black/60 via-transparent to-transparent">
+                  <p className="text-white text-sm font-semibold leading-tight drop-shadow-lg">
+                    Medicina do Esporte
+                  </p>
+                  <p className="text-accent-gold text-xs mt-1 drop-shadow-lg">e Performance</p>
+                </div>
+
+                {/* Decorative badge */}
+                <div className="absolute top-3 right-3 w-8 h-8 rounded-[var(--radius-md)] bg-accent-gold/20 border border-accent-gold/50 flex items-center justify-center backdrop-blur-sm group-hover:bg-accent-gold/30 transition-colors duration-300">
+                  <span className="text-xs font-bold text-accent-gold">⚡</span>
+                </div>
               </motion.div>
             </div>
           </motion.div>
