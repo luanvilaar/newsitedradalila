@@ -1,17 +1,36 @@
 @import "tailwindcss";
 
 :root {
+  /* Khaki / Olive Palette */
+  --khaki-100: #E3E388;
+  --khaki-200: #A2A261;
+  --khaki-300: #ABAB67;
+  --khaki-400: #82824E;
+  --khaki-500: #5E5E39;
+  --khaki-600: #46462A;
+
+  /* Purple / Carbon Palette */
+  --purple-100: #6926D5;
+  --purple-200: #653AAA;
+  --purple-300: #4102A8;
+  --purple-400: #594180;
+  --purple-500: #443A55;
+  --carbon-900: #2E2B33;
+
+  /* Theme Mapping */
   --background: #FAFAF7;
   --surface: #F5F0EB;
   --surface-hover: #EDE6DF;
-  --text-primary: #1A1A1A;
-  --text-secondary: #6B6B6B;
+  --text-primary: var(--carbon-900);
+  --text-secondary: var(--purple-500);
   --text-muted: #9B9B9B;
-  --accent-gold: #C9A96E;
-  --accent-gold-light: #D4BC8E;
-  --accent-gold-dark: #B8944E;
-  --accent-dark: #2C2C2C;
-  --medical-green: #7BA68C;
+  
+  --accent-gold: var(--khaki-300);
+  --accent-gold-light: var(--khaki-100);
+  --accent-gold-dark: var(--khaki-500);
+  --accent-dark: var(--carbon-900);
+  --medical-green: var(--khaki-400);
+  
   --border: #E5E0DA;
   --border-light: #F0EBE5;
   --white: #FFFFFF;
@@ -73,9 +92,10 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
 
-  --font-heading: var(--font-bebas);
-  --font-elegant: var(--font-cormorant);
-  --font-body: var(--font-inter);
+  /* Tipografia premium: Playfair Display (heading/elegant) + Montserrat (body) */
+  --font-heading: var(--font-heading);
+  --font-elegant: var(--font-heading);
+  --font-body: var(--font-body);
 }
 
 /* Base styles */

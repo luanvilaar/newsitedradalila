@@ -37,6 +37,14 @@ export function Footer() {
                 </Link>
               </li>
               <li>
+                <Link
+                  href="/politica-de-protecao-de-dados"
+                  className="text-sm text-text-secondary hover:text-accent-gold hover:underline transition-all duration-300"
+                >
+                  Política de Proteção de Dados
+                </Link>
+              </li>
+              <li>
                 <a
                   href="#especialidades"
                   className="text-sm text-text-secondary hover:text-accent-gold hover:underline transition-all duration-300"

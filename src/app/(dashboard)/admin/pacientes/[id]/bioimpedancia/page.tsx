@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
@@ -9,6 +9,12 @@ import { ArrowLeft, Save, Calculator, CheckCircle, AlertCircle } from "lucide-re
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { PdfUploadBioimpedance } from "@/components/bioimpedance/PdfUpload";
+import { BodySegmentIllustration, type SegmentTrendData } from "@/components/bioimpedance/BodySegmentIllustration";
+
+interface BioimpedanceRecordSummary {
+  muscle_mass?: number | null;
+  body_fat_percentage?: number | null;
+}
 
 export default function BioimpedanciaAdminPage() {
   const params = useParams();
@@ -30,8 +36,125 @@ export default function BioimpedanciaAdminPage() {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isPdfProcessing, setIsPdfProcessing] = useState(false);
+  const [examId, setExamId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [showPreview, setShowPreview] = useState(false);
+  const [segmentTrends, setSegmentTrends] = useState<SegmentTrendData[]>([]);
+  const [latestRecordData, setLatestRecordData] = useState<BioimpedanceRecordSummary | null>(null);
+
+  // Fetch latest record to show analysis
+  useEffect(() => {
+    async function fetchLatest() {
+      try {
+        const res = await fetch(`/api/patients/${patientId}/bioimpedance`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.length > 0) {
+            setLatestRecordData(data[0]);
+            setShowPreview(true);
+            calculateSegmentTrends(data);
+          }
+        }
+      } catch (err) {
+        console.error("Error fetching bioimpedance:", err);
+      }
+    }
+    fetchLatest();
+  }, [patientId, success]);
+
+  // Calculate trends between current and previous record
+  function calculateSegmentTrends(records: BioimpedanceRecordSummary[]) {
+    if (records.length < 1) return;
+
+    const current = records[0];
+    const previous = records[1] || null;
+
+    const calculateChange = (curr: number | undefined, prev: number | undefined) => {
+      if (!curr || !prev || prev === 0) return 0;
+      return ((curr - prev) / prev) * 100;
+    };
+
+    const muscleChange = previous
+      ? calculateChange(current.muscle_mass, previous.muscle_mass)
+      : 0;
+    const fatChange = previous
+      ? calculateChange(current.body_fat_percentage ?? undefined, previous.body_fat_percentage ?? undefined)
+      : 0;
+
+    const fat = current.body_fat_percentage ?? 0;
+    const muscle = current.muscle_mass ?? 0;
+    const isFatHigh    = fat > 30;
+    const isFatBorder  = fat > 24 && fat <= 30;
+    const isMuscleGood = muscle > 25;
+
+    const getTypeNoTrend = (role: "arm" | "leg" | "torso") => {
+      if (isFatHigh)    return "concern"  as const;
+      if (isFatBorder)  return "fat"      as const;
+      if (isMuscleGood) return "muscle"   as const;
+      if (role === "torso" && muscle > 18) return "water" as const;
+      return "stable" as const;
+    };
+
+    const getType = (role: "arm" | "leg" | "torso") => {
+      if (!previous) return getTypeNoTrend(role);
+      if (role === "torso") {
+        if      (muscleChange > 3)  return "muscle"  as const;
+        if      (muscleChange < -3) return "concern" as const;
+        if      (fatChange   > 5)   return "fat"     as const;
+        return "stable" as const;
+      }
+      if (muscleChange > 5)  return "muscle"  as const;
+      if (muscleChange < -5) return "concern" as const;
+      return "stable" as const;
+    };
+
+    const trends: SegmentTrendData[] = [
+      {
+        segment: "armLeft",
+        currentValue: muscle * 0.04,
+        previousValue: (previous?.muscle_mass ?? muscle) * 0.04,
+        percentChange: muscleChange,
+        type: getType("arm"),
+        hasSignificantChange: Math.abs(muscleChange) > 5,
+      },
+      {
+        segment: "armRight",
+        currentValue: muscle * 0.04,
+        previousValue: (previous?.muscle_mass ?? muscle) * 0.04,
+        percentChange: muscleChange,
+        type: getType("arm"),
+        hasSignificantChange: Math.abs(muscleChange) > 5,
+      },
+      {
+        segment: "legLeft",
+        currentValue: muscle * 0.23,
+        previousValue: (previous?.muscle_mass ?? muscle) * 0.23,
+        percentChange: muscleChange,
+        type: getType("leg"),
+        hasSignificantChange: Math.abs(muscleChange) > 5,
+      },
+      {
+        segment: "legRight",
+        currentValue: muscle * 0.23,
+        previousValue: (previous?.muscle_mass ?? muscle) * 0.23,
+        percentChange: muscleChange,
+        type: getType("leg"),
+        hasSignificantChange: Math.abs(muscleChange) > 5,
+      },
+      {
+        segment: "torso",
+        currentValue: muscle * 0.42,
+        previousValue: (previous?.muscle_mass ?? muscle) * 0.42,
+        percentChange: muscleChange,
+        type: getType("torso"),
+        hasSignificantChange: Math.abs(muscleChange) > 3,
+      },
+    ];
+
+    setSegmentTrends(trends);
+  }
 
   function updateField(field: string, value: string | number) {
     const valueStr = String(value);
@@ -51,15 +174,38 @@ export default function BioimpedanciaAdminPage() {
     setForm(newForm);
   }
 
-  function handlePdfDataExtracted(extractedData: any) {
-    // Update form with extracted data
-    Object.entries(extractedData).forEach(([key, value]) => {
-      if (value !== null && value !== undefined && key in form) {
-        // Only update if value is a string or number
-        if (typeof value === "string" || typeof value === "number") {
-          updateField(key, value);
+  const isFormLocked = isLoading || isPdfProcessing;
+
+  function handlePdfDataExtracted(
+    extractedData: Record<string, string | number | null | undefined>,
+    meta?: { examId?: string }
+  ) {
+    if (meta?.examId) {
+      setExamId(meta.examId);
+    }
+
+    // Build the complete updated form in one pass to avoid stale closure
+    setForm((prev) => {
+      const next = { ...prev };
+      for (const [key, value] of Object.entries(extractedData)) {
+        const currentValue = (next as Record<string, string>)[key];
+        if (
+          value !== null &&
+          value !== undefined &&
+          key in next &&
+          !currentValue &&
+          (typeof value === "string" || typeof value === "number")
+        ) {
+          (next as Record<string, string>)[key] = String(value);
         }
       }
+      // Auto-calculate BMI from extracted weight + height
+      const w = parseFloat(next.weight);
+      const h = parseFloat(next.height);
+      if (w > 0 && h > 0) {
+        next.bmi = (w / Math.pow(h / 100, 2)).toFixed(2);
+      }
+      return next;
     });
   }
 
@@ -86,7 +232,10 @@ export default function BioimpedanciaAdminPage() {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(form),
+          body: JSON.stringify({
+            ...form,
+            exam_id: examId,
+          }),
         }
       );
 
@@ -113,6 +262,7 @@ export default function BioimpedanciaAdminPage() {
           measurement_date: new Date().toISOString().split("T")[0],
           notes: "",
         });
+        setExamId(null);
         setSuccess(null);
       }, 2000);
     } catch (err) {
@@ -149,6 +299,7 @@ export default function BioimpedanciaAdminPage() {
           patientId={patientId}
           onDataExtracted={handlePdfDataExtracted}
           isLoading={isLoading}
+          onProcessingChange={setIsPdfProcessing}
         />
       </Card>
 
@@ -168,6 +319,7 @@ export default function BioimpedanciaAdminPage() {
                 placeholder="75.0"
                 value={form.weight}
                 onChange={(e) => updateField("weight", e.target.value)}
+                disabled={isFormLocked}
               />
               <Input
                 id="height"
@@ -177,6 +329,7 @@ export default function BioimpedanciaAdminPage() {
                 placeholder="170.0"
                 value={form.height}
                 onChange={(e) => updateField("height", e.target.value)}
+                disabled={isFormLocked}
               />
             </div>
             <div className="flex items-center gap-2">
@@ -188,6 +341,7 @@ export default function BioimpedanciaAdminPage() {
                 value={form.bmi}
                 onChange={(e) => updateField("bmi", e.target.value)}
                 className="bg-surface/50"
+                disabled={isFormLocked}
               />
               <div className="pt-6">
                 <Calculator size={18} className="text-text-muted" />
@@ -203,6 +357,7 @@ export default function BioimpedanciaAdminPage() {
               onChange={(e) =>
                 updateField("body_fat_percentage", e.target.value)
               }
+              disabled={isFormLocked}
             />
             <Input
               id="muscle_mass"
@@ -212,6 +367,7 @@ export default function BioimpedanciaAdminPage() {
               placeholder="30.0"
               value={form.muscle_mass}
               onChange={(e) => updateField("muscle_mass", e.target.value)}
+              disabled={isFormLocked}
             />
             <Input
               id="bone_mass"
@@ -221,6 +377,7 @@ export default function BioimpedanciaAdminPage() {
               placeholder="3.0"
               value={form.bone_mass}
               onChange={(e) => updateField("bone_mass", e.target.value)}
+              disabled={isFormLocked}
             />
             <Input
               id="water_percentage"
@@ -232,6 +389,7 @@ export default function BioimpedanciaAdminPage() {
               onChange={(e) =>
                 updateField("water_percentage", e.target.value)
               }
+              disabled={isFormLocked}
             />
           </div>
         </Card>
@@ -250,6 +408,7 @@ export default function BioimpedanciaAdminPage() {
                 placeholder="10"
                 value={form.visceral_fat}
                 onChange={(e) => updateField("visceral_fat", e.target.value)}
+                disabled={isFormLocked}
               />
               <Input
                 id="basal_metabolic_rate"
@@ -260,6 +419,7 @@ export default function BioimpedanciaAdminPage() {
                 onChange={(e) =>
                   updateField("basal_metabolic_rate", e.target.value)
                 }
+                disabled={isFormLocked}
               />
               <Input
                 id="metabolic_age"
@@ -268,6 +428,7 @@ export default function BioimpedanciaAdminPage() {
                 placeholder="35"
                 value={form.metabolic_age}
                 onChange={(e) => updateField("metabolic_age", e.target.value)}
+                disabled={isFormLocked}
               />
             </div>
           </Card>
@@ -285,6 +446,7 @@ export default function BioimpedanciaAdminPage() {
                 onChange={(e) =>
                   updateField("measurement_date", e.target.value)
                 }
+                disabled={isFormLocked}
               />
               <Textarea
                 id="notes"
@@ -292,6 +454,7 @@ export default function BioimpedanciaAdminPage() {
                 placeholder="Notas adicionais sobre a medição..."
                 value={form.notes}
                 onChange={(e) => updateField("notes", e.target.value)}
+                disabled={isFormLocked}
               />
             </div>
           </Card>
@@ -307,6 +470,48 @@ export default function BioimpedanciaAdminPage() {
           </div>
         )}
 
+
+      {/* Análise Segmentar Preview - New Avatar */}
+      {showPreview && latestRecordData && segmentTrends.length > 0 && (
+        <div className="mt-8">
+          <Card>
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-text-primary">
+                Análise Corporal Segmentar
+              </h2>
+              <p className="text-sm text-text-muted mt-1">
+                Visualização interativa da composição corporal por região
+              </p>
+            </div>
+
+            <div className="space-y-8">
+              {/* Massa Magra */}
+              <div>
+                <h3 className="text-sm font-semibold text-text-primary mb-4">
+                  Massa Magra
+                </h3>
+                <div className="flex justify-center">
+                  <BodySegmentIllustration
+                    segments={segmentTrends}
+                    gender="neutral"
+                    mode="leanMass"
+                    size="md"
+                    className="max-w-sm"
+                  />
+                </div>
+                <div className="mt-4 text-center text-sm">
+                  <p className="text-text-muted">
+                    Total:{" "}
+                    <span className="font-semibold text-text-primary">
+                      {latestRecordData.muscle_mass?.toFixed(1)} kg
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
         {success && (
           <div className="flex items-start gap-3 p-4 rounded-lg bg-green-50 border border-green-200">
             <CheckCircle size={18} className="text-green-600 mt-0.5 flex-shrink-0" />
@@ -319,10 +524,10 @@ export default function BioimpedanciaAdminPage() {
             variant="premium"
             onClick={handleSave}
             className="gap-2"
-            disabled={isLoading}
+            disabled={isFormLocked}
           >
             <Save size={16} />
-            {isLoading ? "Salvando..." : "Salvar Registro"}
+            {isPdfProcessing ? "Processando PDF..." : isLoading ? "Salvando..." : "Salvar Registro"}
           </Button>
         </div>
       </div>

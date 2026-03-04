@@ -23,13 +23,17 @@ export default function ExamesPage() {
     async function fetchDocuments() {
       try {
         const res = await fetch("/api/patients/current/documents");
-        if (!res.ok) throw new Error("Failed to fetch documents");
+        if (!res.ok) {
+          // Don't throw - just show empty state
+          setDocuments([]);
+          return;
+        }
 
         const docs = await res.json();
-        setDocuments(docs);
+        setDocuments(Array.isArray(docs) ? docs : []);
       } catch (err) {
         console.error("Error fetching documents:", err);
-        setError(err instanceof Error ? err.message : "Erro ao carregar exames");
+        setDocuments([]);
       } finally {
         setLoading(false);
       }

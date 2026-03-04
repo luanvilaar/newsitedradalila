@@ -1,20 +1,47 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { MapPin, Phone } from "lucide-react";
+import { Instagram, Map, MapPin, Phone } from "lucide-react";
 
-const locations = [
+type LocationCard = {
+  city: string;
+  state: string;
+  description: string;
+  address?: string;
+  mapsUrl?: string;
+  wazeUrl?: string;
+  instagramUrl?: string;
+  whatsappNumber?: string;
+  whatsappMessage?: string;
+};
+
+const locations: LocationCard[] = [
   {
     city: "João Pessoa",
     state: "PB",
+    address:
+      "R. Silvino Chaves, 911 - Manaíra, João Pessoa - PB, 58038-420",
     description:
       "Atendimento presencial com toda a infraestrutura para avaliação completa e acompanhamento personalizado.",
+    mapsUrl:
+      "https://www.google.com/maps/search/?api=1&query=R.%20Silvino%20Chaves%2C%20911%20-%20Mana%C3%ADra%2C%20Jo%C3%A3o%20Pessoa%20-%20PB%2C%2058038-420",
+    wazeUrl:
+      "https://waze.com/ul?q=R.%20Silvino%20Chaves%2C%20911%20-%20Mana%C3%ADra%2C%20Jo%C3%A3o%20Pessoa%20-%20PB%2C%2058038-420&navigate=yes",
+    whatsappNumber: "5583988118436",
+    whatsappMessage: "Ol%C3%A1! Gostaria de agendar uma consulta em Jo%C3%A3o Pessoa.",
   },
   {
     city: "Recife",
     state: "PE",
+    address:
+      "Av. Mal. Mascarenhas de Morais, 4861 - Imbiribeira, Recife - PE, 51150-000",
     description:
       "Consultas presenciais com a mesma excelência e abordagem individualizada.",
+    mapsUrl:
+      "https://www.google.com/maps/search/?api=1&query=Av.%20Mal.%20Mascarenhas%20de%20Morais%2C%204861%20-%20Imbiribeira%2C%20Recife%20-%20PE%2C%2051150-000",
+    wazeUrl:
+      "https://waze.com/ul?q=Av.%20Mal.%20Mascarenhas%20de%20Morais%2C%204861%20-%20Imbiribeira%2C%20Recife%20-%20PE%2C%2051150-000&navigate=yes",
+    instagramUrl: "https://www.instagram.com/sutilleclinica/",
   },
 ];
 
@@ -115,9 +142,17 @@ export function Locations() {
                   </div>
                 </div>
 
-                <p className="text-text-secondary text-sm leading-relaxed mb-6 group-hover:text-text-primary transition-colors duration-300">
+                <p className="text-text-secondary text-sm leading-relaxed mb-4 group-hover:text-text-primary transition-colors duration-300">
                   {location.description}
                 </p>
+
+                {location.address ? (
+                  <p className="text-text-primary text-sm md:text-base font-medium mb-6">
+                    {location.address}
+                  </p>
+                ) : (
+                  <div className="mb-6" />
+                )}
 
                 {/* Decorative line - appears on hover */}
                 <motion.div
@@ -128,13 +163,68 @@ export function Locations() {
                   style={{ originX: 0 }}
                 />
 
-                <motion.div
-                  className="flex items-center gap-2 text-sm text-accent-gold group-hover:text-accent-gold-dark transition-colors cursor-pointer"
-                  whileHover={{ x: 4 }}
-                >
-                  <Phone size={14} />
-                  <span>Agendar consulta</span>
-                </motion.div>
+                <div className="flex flex-wrap items-center gap-3">
+                  {location.mapsUrl && (
+                    <a
+                      href={location.mapsUrl}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="inline-flex items-center gap-2 text-sm px-4 py-2 rounded-full border border-accent-gold/40 bg-accent-gold/10 text-accent-gold hover:bg-accent-gold/20 hover:border-accent-gold/60 transition-colors"
+                      aria-label={`Abrir ${location.city} no Google Maps`}
+                    >
+                      <Map size={14} />
+                      <span>Google Maps</span>
+                    </a>
+                  )}
+
+                  {location.wazeUrl && (
+                    <a
+                      href={location.wazeUrl}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="inline-flex items-center gap-2 text-sm px-4 py-2 rounded-full border border-accent-gold/40 text-accent-gold hover:text-accent-gold-dark hover:border-accent-gold/60 transition-colors"
+                      aria-label={`Abrir ${location.city} no Waze`}
+                    >
+                      <MapPin size={14} />
+                      <span>Waze</span>
+                    </a>
+                  )}
+
+                  {location.instagramUrl && (
+                    <a
+                      href={location.instagramUrl}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="inline-flex items-center gap-2 text-sm px-4 py-2 rounded-full border border-accent-gold/40 text-accent-gold hover:text-accent-gold-dark hover:border-accent-gold/60 transition-colors"
+                      aria-label={`Abrir Instagram da clínica em ${location.city}`}
+                    >
+                      <Instagram size={14} />
+                      <span>Instagram</span>
+                    </a>
+                  )}
+
+                  {location.whatsappNumber ? (
+                    <motion.a
+                      href={`https://wa.me/${location.whatsappNumber}${location.whatsappMessage ? `?text=${location.whatsappMessage}` : ""}`}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                      className="flex items-center gap-2 text-sm text-accent-gold group-hover:text-accent-gold-dark transition-colors cursor-pointer"
+                      whileHover={{ x: 4 }}
+                      aria-label={`Abrir WhatsApp para agendar consulta em ${location.city}`}
+                    >
+                      <Phone size={14} />
+                      <span>Agendar consulta</span>
+                    </motion.a>
+                  ) : (
+                    <motion.div
+                      className="flex items-center gap-2 text-sm text-accent-gold group-hover:text-accent-gold-dark transition-colors cursor-pointer"
+                      whileHover={{ x: 4 }}
+                    >
+                      <Phone size={14} />
+                      <span>Agendar consulta</span>
+                    </motion.div>
+                  )}
+                </div>
               </div>
             </motion.div>
           ))}

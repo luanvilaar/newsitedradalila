@@ -23,8 +23,12 @@ CREATE POLICY "Users can view own profile" ON profiles
   FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "Admins can view all profiles" ON profiles
   FOR SELECT USING (is_admin());
+CREATE POLICY "Users can insert own profile" ON profiles
+  FOR INSERT WITH CHECK (auth.uid() = id);
 CREATE POLICY "Admins can insert profiles" ON profiles
   FOR INSERT WITH CHECK (is_admin());
+CREATE POLICY "Users can update own profile" ON profiles
+  FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Admins can update profiles" ON profiles
   FOR UPDATE USING (is_admin());
 

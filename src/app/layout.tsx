@@ -1,23 +1,19 @@
 import type { Metadata } from "next";
-import { Bebas_Neue, Cormorant_Garamond, Inter } from "next/font/google";
+import { Playfair_Display, Montserrat } from "next/font/google";
 import "./globals.css";
 
-const bebasNeue = Bebas_Neue({
-  variable: "--font-bebas",
-  weight: "400",
+// Tipografia premium: Playfair Display (títulos/elegante) + Montserrat (corpo)
+const playfair = Playfair_Display({
+  variable: "--font-heading",
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
   subsets: ["latin"],
   display: "swap",
 });
 
-const cormorant = Cormorant_Garamond({
-  variable: "--font-cormorant",
-  weight: ["300", "400", "500", "600", "700"],
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const inter = Inter({
-  variable: "--font-inter",
+const montserrat = Montserrat({
+  variable: "--font-body",
+  weight: ["400", "500", "600", "700"],
   subsets: ["latin"],
   display: "swap",
 });
@@ -53,7 +49,7 @@ export default function RootLayout({
   return (
     <html lang="pt-BR" data-scroll-behavior="smooth">
       <body
-        className={`${bebasNeue.variable} ${cormorant.variable} ${inter.variable} antialiased`}
+        className={`${playfair.variable} ${montserrat.variable} antialiased overflow-x-hidden max-w-[100vw] text-foreground bg-background`}
       >
         {children}
       </body>

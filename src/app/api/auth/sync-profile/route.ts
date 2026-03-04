@@ -29,8 +29,30 @@ export async function POST(request: Request) {
       .eq("id", user.id)
       .single();
 
-    // Profile already exists
+    // Profile already exists - ensure patients entry exists too
     if (existingProfile) {
+      // Ensure patients table entry exists for patient role
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (profileData?.role === "patient") {
+        const { data: patientExists } = await supabase
+          .from("patients")
+          .select("id")
+          .eq("id", user.id)
+          .single();
+
+        if (!patientExists) {
+          await supabase.from("patients").insert({
+            id: user.id,
+            status: "active",
+          });
+        }
+      }
+
       return NextResponse.json({
         message: "Profile already exists",
         profile: existingProfile,
@@ -55,6 +77,20 @@ export async function POST(request: Request) {
           { error: `Failed to create profile: ${createError.message}` },
           { status: 400 }
         );
+      }
+
+      // Also create a patients table entry
+      if (newProfile.role === "patient") {
+        const { error: patientError } = await supabase
+          .from("patients")
+          .insert({
+            id: user.id,
+            status: "active",
+          });
+
+        if (patientError) {
+          console.error("Failed to create patient entry:", patientError);
+        }
       }
 
       return NextResponse.json({

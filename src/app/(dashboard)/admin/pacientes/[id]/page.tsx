@@ -18,8 +18,22 @@ import {
   Clock,
 } from "lucide-react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
+
+const PatientOverviewCharts = dynamic(
+  () =>
+    import("@/components/patient/PatientOverviewCharts").then(
+      (m) => m.PatientOverviewCharts
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="mt-8 h-40 rounded-2xl bg-surface animate-pulse" />
+    ),
+  }
+);
 
 interface PatientData {
   id: string;
@@ -91,8 +105,9 @@ function OverviewTab({
   if (!patient) return <SkeletonCard />;
 
   return (
-    <div className="grid lg:grid-cols-2 gap-6">
-      <Card>
+    <div>
+      <div className="grid lg:grid-cols-2 gap-6">
+        <Card>
         <h3 className="font-medium text-text-primary mb-4">Dados Pessoais</h3>
         <div className="space-y-3">
           <div className="flex items-center gap-3 text-sm">
@@ -161,8 +176,15 @@ function OverviewTab({
           </div>
         </div>
       </Card>
+      </div>
+
+      <OverviewChartsSection patientId={patientId} />
     </div>
   );
+}
+
+function OverviewChartsSection({ patientId }: { patientId: string }) {
+  return <PatientOverviewCharts patientId={patientId} />;
 }
 
 function AnamneseTab({ patientId }: { patientId: string }) {
@@ -610,7 +632,18 @@ export default function PatientDetailPage() {
     async function fetchPatient() {
       try {
         const res = await fetch(`/api/patients/${patientId}`);
-        if (!res.ok) throw new Error("Failed to fetch patient");
+        if (!res.ok) {
+          let message = "Failed to fetch patient";
+          try {
+            const payload = await res.json();
+            if (payload?.error) {
+              message = payload.error;
+            }
+          } catch {
+            // Ignore JSON parse errors and keep default message.
+          }
+          throw new Error(message);
+        }
 
         const data = await res.json();
         setPatient(data);

@@ -52,9 +52,66 @@ export default function AnamnesePage() {
     if (currentStep > 0) setCurrentStep(currentStep - 1);
   }
 
-  function handleSave() {
-    // TODO: Save to Supabase
-    console.log("Saving anamnesis:", form);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  async function handleSave() {
+    setSaving(true);
+    setSaveError(null);
+    setSaveSuccess(false);
+
+    try {
+      const payload = {
+        chief_complaint: form.chief_complaint,
+        history_present_illness: form.history_present_illness,
+        past_medical_history: form.past_medical_history
+          ? form.past_medical_history.split("\n").filter(Boolean)
+          : [],
+        surgeries: form.surgeries
+          ? form.surgeries.split("\n").filter(Boolean)
+          : [],
+        medications: form.medications
+          ? form.medications.split("\n").filter(Boolean)
+          : [],
+        allergies: form.allergies
+          ? form.allergies.split("\n").filter(Boolean)
+          : [],
+        family_history: form.family_history,
+        smoking_status: form.smoking_status,
+        alcohol_use: form.alcohol_use,
+        exercise_frequency: form.exercise_frequency,
+        diet_pattern: form.diet_pattern,
+        hormonal_history: form.hormonal_history
+          ? { notes: form.hormonal_history }
+          : null,
+        obesity_metrics: form.obesity_notes
+          ? { notes: form.obesity_notes }
+          : null,
+        performance_goals: form.performance_goals
+          ? { notes: form.performance_goals }
+          : null,
+      };
+
+      const res = await fetch(`/api/patients/${patientId}/anamnesis`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Erro ao salvar anamnese");
+      }
+
+      setSaveSuccess(true);
+    } catch (err) {
+      setSaveError(
+        err instanceof Error ? err.message : "Erro ao salvar anamnese"
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -293,6 +350,18 @@ export default function AnamnesePage() {
         )}
       </Card>
 
+      {/* Save Feedback */}
+      {saveSuccess && (
+        <Card className="mb-6 border border-success/20 bg-success/5">
+          <p className="text-success text-sm">Anamnese salva com sucesso!</p>
+        </Card>
+      )}
+      {saveError && (
+        <Card className="mb-6 border border-error/20 bg-error/5">
+          <p className="text-error text-sm">{saveError}</p>
+        </Card>
+      )}
+
       {/* Navigation */}
       <div className="flex items-center justify-between">
         <Button
@@ -311,9 +380,14 @@ export default function AnamnesePage() {
             <ChevronRight size={16} />
           </Button>
         ) : (
-          <Button variant="premium" onClick={handleSave} className="gap-2">
+          <Button
+            variant="premium"
+            onClick={handleSave}
+            className="gap-2"
+            disabled={saving}
+          >
             <Save size={16} />
-            Salvar Anamnese
+            {saving ? "Salvando..." : "Salvar Anamnese"}
           </Button>
         )}
       </div>

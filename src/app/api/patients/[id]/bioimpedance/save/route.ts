@@ -1,7 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
-async function isAdmin(supabase: any, userId: string): Promise<boolean> {
+async function isAdmin(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  userId: string
+): Promise<boolean> {
   const { data } = await supabase
     .from("profiles")
     .select("role")
@@ -81,6 +84,56 @@ export async function POST(
         { error: "Failed to save bioimpedance record" },
         { status: 500 }
       );
+    }
+
+    const patientSnapshot = {
+      weight: bioimpedanceRecord.weight,
+      height: bioimpedanceRecord.height,
+      bmi: bioimpedanceRecord.bmi,
+      body_fat_percentage: bioimpedanceRecord.body_fat_percentage,
+      muscle_mass: bioimpedanceRecord.muscle_mass,
+      bone_mass: bioimpedanceRecord.bone_mass,
+      visceral_fat: bioimpedanceRecord.visceral_fat,
+      water_percentage: bioimpedanceRecord.water_percentage,
+      basal_metabolic_rate: bioimpedanceRecord.basal_metabolic_rate,
+      metabolic_age: bioimpedanceRecord.metabolic_age,
+      bioimpedance_updated_at: new Date().toISOString(),
+    };
+
+    const { error: patientUpdateError } = await supabase
+      .from("patients")
+      .update(patientSnapshot)
+      .eq("id", id);
+
+    if (patientUpdateError) {
+      console.error("Patient snapshot update error:", patientUpdateError);
+    }
+
+    if (body.exam_id) {
+      const { error: examUpdateError } = await supabase
+        .from("bioimpedance_exams")
+        .update({
+          bioimpedance_record_id: savedRecord.id,
+          parsed_data: {
+            weight: savedRecord.weight,
+            height: savedRecord.height,
+            bmi: savedRecord.bmi,
+            body_fat_percentage: savedRecord.body_fat_percentage,
+            muscle_mass: savedRecord.muscle_mass,
+            bone_mass: savedRecord.bone_mass,
+            visceral_fat: savedRecord.visceral_fat,
+            water_percentage: savedRecord.water_percentage,
+            basal_metabolic_rate: savedRecord.basal_metabolic_rate,
+            metabolic_age: savedRecord.metabolic_age,
+            measurement_date: savedRecord.measurement_date,
+          },
+        })
+        .eq("id", body.exam_id)
+        .eq("patient_id", id);
+
+      if (examUpdateError) {
+        console.error("Exam update error:", examUpdateError);
+      }
     }
 
     return NextResponse.json({

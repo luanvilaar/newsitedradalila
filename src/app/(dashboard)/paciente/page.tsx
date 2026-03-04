@@ -20,34 +20,47 @@ export default function PatientDashboard() {
   useEffect(() => {
     async function fetchPatientData() {
       try {
-        // Fetch patient data
-        const patientRes = await fetch("/api/patients/current");
-        if (!patientRes.ok) throw new Error("Failed to fetch patient data");
+        // Fetch all data in parallel - don't fail if one request fails
+        const [patientRes, prescriptionsRes, bioRes, servicesRes] =
+          await Promise.allSettled([
+            fetch("/api/patients/current"),
+            fetch("/api/patients/current/prescriptions"),
+            fetch("/api/patients/current/bioimpedance"),
+            fetch("/api/patients/current/services"),
+          ]);
 
-        // Fetch prescriptions to count active medications
-        const prescriptionsRes = await fetch("/api/patients/current/prescriptions");
-        const prescriptions = prescriptionsRes.ok ? await prescriptionsRes.json() : [];
+        const prescriptions =
+          prescriptionsRes.status === "fulfilled" && prescriptionsRes.value.ok
+            ? await prescriptionsRes.value.json()
+            : [];
 
-        // Fetch bioimpedance to get latest
-        const bioRes = await fetch("/api/patients/current/bioimpedance");
-        const bioRecords = bioRes.ok ? await bioRes.json() : [];
+        const bioRecords =
+          bioRes.status === "fulfilled" && bioRes.value.ok
+            ? await bioRes.value.json()
+            : [];
 
-        // Fetch services
-        const servicesRes = await fetch("/api/patients/current/services");
-        const services = servicesRes.ok ? await servicesRes.json() : [];
+        const services =
+          servicesRes.status === "fulfilled" && servicesRes.value.ok
+            ? await servicesRes.value.json()
+            : [];
 
-        const activeMeds = prescriptions.filter(
-          (p: any) => p.type === "medication" && p.status === "active"
-        ).length;
+        const activeMeds = Array.isArray(prescriptions)
+          ? prescriptions.filter(
+              (p: any) => p.type === "medication" && p.status === "active"
+            ).length
+          : 0;
 
-        const latestBio = bioRecords.length > 0 ? bioRecords[0] : null;
+        const latestBio =
+          Array.isArray(bioRecords) && bioRecords.length > 0
+            ? bioRecords[0]
+            : null;
 
         setData({
           activeMedications: activeMeds,
           lastBioimpedance: latestBio
             ? new Date(latestBio.measurement_date).toLocaleDateString("pt-BR")
             : undefined,
-          contractedServices: services.length,
+          contractedServices: Array.isArray(services) ? services.length : 0,
         });
       } catch (err) {
         console.error("Error fetching patient data:", err);

@@ -5,143 +5,208 @@ import { Button } from "@/components/ui/Button";
 import Image from "next/image";
 import Link from "next/link";
 
+const stats = [
+  { value: "+5", label: "Anos de experiência" },
+  { value: "2", label: "Cidades de atendimento" },
+  { value: "100%", label: "Foco no resultado" },
+];
+
+const specialties = ["Emagrecimento", "Saúde", "Performance"];
+
 export function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden bg-white">
-      {/* Subtle warm background accents */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* Warm gradient base */}
-        <div className="absolute inset-0 bg-gradient-to-br from-white via-[#FAFAF7] to-[#F5F0EB]" />
+    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-white via-[#FAFAF7] to-[#F5F0EB]">
+      {/* Subtle dot grid */}
+      <div
+        className="absolute inset-0 opacity-[0.022] pointer-events-none"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, #8B7355 1px, transparent 1px)",
+          backgroundSize: "32px 32px",
+        }}
+      />
 
-        {/* Subtle gold radial accent - top right */}
-        <div
-          className="absolute -top-32 -right-32 w-[600px] h-[600px] rounded-full opacity-30"
-          style={{
-            background:
-              "radial-gradient(circle, rgba(201, 169, 110, 0.15) 0%, transparent 70%)",
-          }}
-        />
+      {/* Decorative bottom line */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent-gold/30 to-transparent z-20" />
 
-        {/* Subtle warm accent - bottom left */}
-        <div
-          className="absolute -bottom-40 -left-40 w-[500px] h-[500px] rounded-full opacity-20"
-          style={{
-            background:
-              "radial-gradient(circle, rgba(245, 240, 235, 0.8) 0%, transparent 70%)",
-          }}
-        />
+      {/* Full-height layout grid */}
+      <div className="relative z-10 min-h-screen grid md:grid-cols-[55%_45%]">
 
-        {/* Decorative gold line */}
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent-gold/20 to-transparent" />
-      </div>
+        {/* ── Left: Text Content ── */}
+        <div className="flex flex-col justify-center px-8 md:px-14 lg:px-20 xl:px-28 py-28 md:py-0 text-center md:text-left">
 
-      {/* Content */}
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 grid md:grid-cols-2 items-center gap-8 md:gap-12 py-24 md:py-0">
-        {/* Left: Text Content */}
-        <div className="text-center md:text-left">
+          {/* Gold accent rule */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            className="hidden md:block w-10 h-px bg-accent-gold mb-7 origin-left"
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          />
+
+          {/* Credential row */}
+          <motion.div
+            className="flex items-center gap-3 mb-4 justify-center md:justify-start"
+            initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
+            transition={{ duration: 0.55, delay: 0.2 }}
           >
-            <p className="font-elegant text-xl md:text-2xl text-accent-gold mb-4 tracking-wider">
-              Dra. Dalila Lucena — CRM 15295
+            <p className="font-body text-[0.6rem] tracking-[0.35em] uppercase text-accent-gold">
+              Dra. Dalila Lucena
+            </p>
+            <div className="w-px h-3 bg-accent-gold/40" />
+            <p className="font-body text-[0.6rem] tracking-[0.2em] uppercase text-text-muted">
+              CRM 15295
             </p>
           </motion.div>
 
-          <motion.h1
-            className="font-heading text-4xl md:text-6xl lg:text-7xl text-accent-dark leading-none tracking-wider mb-6"
-            initial={{ opacity: 0, y: 40 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-          >
-            CIÊNCIA, PRECISÃO E<br />
-            PERFORMANCE
-          </motion.h1>
-
+          {/* Lead phrase — small eyebrow above h1 */}
           <motion.p
-            className="font-elegant text-lg md:text-xl text-text-secondary mb-10 max-w-2xl italic"
-            initial={{ opacity: 0, y: 30 }}
+            className="font-body text-[0.7rem] tracking-[0.22em] uppercase text-text-muted mb-3 justify-center md:justify-start flex"
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
           >
-            Aplicadas à sua melhor versão.
+            Medicina focada em
           </motion.p>
 
-          <motion.div
-            className="flex flex-col sm:flex-row items-center md:items-start gap-4"
-            initial={{ opacity: 0, y: 30 }}
+          {/* H1 — exactly 2 lines */}
+          <motion.h1
+            className="font-heading text-[2.65rem] md:text-[3rem] lg:text-[3.5rem] text-accent-dark leading-[1.12] tracking-tight mb-5"
+            initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.8 }}
+            transition={{ duration: 0.8, delay: 0.38 }}
           >
-            <Button variant="premium" size="lg" className="min-w-[220px]">
-              Agendar Consulta
+            Emagrecimento,<br />
+            Saúde e Performance
+          </motion.h1>
+
+          {/* Specialty chips */}
+          <motion.div
+            className="flex flex-wrap gap-2 mb-6 justify-center md:justify-start"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.52 }}
+          >
+            {specialties.map((s) => (
+              <span
+                key={s}
+                className="font-body text-[0.6rem] tracking-[0.18em] uppercase text-accent-gold/80 border border-accent-gold/25 rounded-full px-3 py-1 bg-accent-gold/5"
+              >
+                {s}
+              </span>
+            ))}
+          </motion.div>
+
+          {/* Gold divider */}
+          <motion.div
+            className="w-8 h-px bg-accent-gold/60 mx-auto md:mx-0 mb-5"
+            initial={{ opacity: 0, scaleX: 0 }}
+            animate={{ opacity: 1, scaleX: 1 }}
+            transition={{ duration: 0.4, delay: 0.58 }}
+          />
+
+          {/* Subtitle */}
+          <motion.p
+            className="font-body text-base md:text-[1.05rem] text-text-secondary leading-relaxed max-w-[420px] mx-auto md:mx-0 mb-10"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.63 }}
+          >
+            Tratamento personalizado e baseado em ciência para você alcançar
+            sua melhor versão com saúde e qualidade de vida.
+          </motion.p>
+
+          {/* CTAs */}
+          <motion.div
+            className="flex flex-col sm:flex-row items-center md:items-start gap-3 mb-14"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.76 }}
+          >
+            <Button
+              variant="premium"
+              size="lg"
+              className="min-w-[196px]"
+              asChild
+            >
+              <Link
+                href="https://calendar.google.com/calendar/appointments/schedules/AcZssZ304GQnQvezrYe8wYoeIY3Z9jumbUKc7oHPExOJWnWI2pt3lNbq80np2s8J7fydjXTDGCpuRxo1?gv=true"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Agendar Consulta
+              </Link>
             </Button>
             <Link href="/login" className="group">
               <Button
                 variant="outline"
                 size="lg"
-                className="min-w-[220px] border-accent-dark/20 text-accent-dark group-hover:border-accent-gold group-hover:bg-accent-gold/10 group-hover:text-accent-gold transition-all duration-300"
+                className="min-w-[196px] border-accent-dark/20 text-accent-dark group-hover:border-accent-gold group-hover:text-accent-gold transition-all duration-300"
               >
                 Área do Paciente
               </Button>
             </Link>
           </motion.div>
+
+          {/* Stats strip */}
+          <motion.div
+            className="hidden md:flex items-start pt-8 border-t border-border/60"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.6, delay: 0.95 }}
+          >
+            {stats.map((stat, i) => (
+              <div key={stat.label} className="flex items-stretch">
+                {i > 0 && (
+                  <div className="w-px bg-border/60 mx-8 self-stretch" />
+                )}
+                <div>
+                  <p className="font-heading text-[1.75rem] text-accent-gold leading-none">
+                    {stat.value}
+                  </p>
+                  <p className="font-body text-[0.6rem] tracking-[0.15em] uppercase text-text-muted mt-1.5">
+                    {stat.label}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </motion.div>
         </div>
 
-        {/* Right: Doctor Photo */}
+        {/* ── Right: Photo full-height ── */}
         <motion.div
-          className="relative hidden md:flex justify-center items-end"
-          initial={{ opacity: 0, x: 40 }}
+          className="hidden md:block relative"
+          initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 1, delay: 0.5 }}
+          transition={{ duration: 1.2, delay: 0.15 }}
         >
-          <div className="relative w-full max-w-md">
-            {/* Photo - naturally blends with white background */}
-            <div className="relative aspect-[3/4] overflow-hidden">
-              <Image
-                src="/hero-dalila.png"
-                alt="Dra. Dalila Lucena — Medicina de Performance e Longevidade"
-                fill
-                className="object-cover object-top"
-                sizes="(max-width: 768px) 0vw, 40vw"
-                priority
-              />
-              {/* Bottom fade to white */}
-              <div className="absolute bottom-0 left-0 right-0 h-40 bg-gradient-to-t from-white to-transparent" />
-            </div>
+          {/* Left gradient blends photo into background */}
+          <div className="absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#FAFAF7] to-transparent z-10 pointer-events-none" />
 
-            {/* Subtle gold accent behind photo */}
-            <motion.div
-              className="absolute -inset-8 -z-10 pointer-events-none"
-              style={{
-                background:
-                  "radial-gradient(circle at 50% 30%, rgba(201, 169, 110, 0.08) 0%, transparent 70%)",
-              }}
-              animate={{
-                opacity: [0.6, 1, 0.6],
-              }}
-              transition={{
-                duration: 5,
-                repeat: Infinity,
-                repeatType: "reverse",
-                ease: "easeInOut",
-              }}
-            />
-          </div>
+          {/* Bottom fade */}
+          <div className="absolute bottom-0 left-0 right-0 h-56 bg-gradient-to-t from-[#F5F0EB] to-transparent z-10 pointer-events-none" />
+
+          <Image
+            src="/hero-dalila.png"
+            alt="Dra. Dalila Lucena — Medicina de Performance e Longevidade"
+            fill
+            className="object-cover object-top"
+            sizes="45vw"
+            priority
+          />
         </motion.div>
       </div>
 
       {/* Scroll indicator */}
       <motion.div
-        className="absolute bottom-8 left-1/2 -translate-x-1/2"
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20"
         animate={{ y: [0, 8, 0] }}
         transition={{ duration: 2, repeat: Infinity }}
       >
-        <div className="w-6 h-10 border-2 border-accent-dark/20 rounded-full flex items-start justify-center p-1">
+        <div className="w-5 h-9 border border-accent-dark/20 rounded-full flex items-start justify-center p-1">
           <motion.div
-            className="w-1.5 h-3 bg-accent-dark/30 rounded-full"
-            animate={{ y: [0, 12, 0] }}
+            className="w-1 h-2.5 bg-accent-dark/25 rounded-full"
+            animate={{ y: [0, 10, 0] }}
             transition={{ duration: 2, repeat: Infinity }}
           />
         </div>

@@ -66,8 +66,100 @@ export default function PrescricoesPage() {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  function handleSave() {
-    console.log("Saving prescription:", { type, ...form });
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  async function handleSave() {
+    setSaving(true);
+    setSaveError(null);
+    setSaveSuccess(false);
+
+    if (!form.title || !form.start_date) {
+      setSaveError("Título e data de início são obrigatórios.");
+      setSaving(false);
+      return;
+    }
+
+    try {
+      const typeDetails: Record<string, any> = {};
+
+      if (type === "medication") {
+        typeDetails.medication_details = {
+          drug: form.drug,
+          dosage: form.dosage,
+          frequency: form.frequency,
+          duration: form.duration,
+          instructions: form.instructions,
+        };
+      } else if (type === "diet") {
+        typeDetails.diet_details = {
+          diet_plan: form.diet_plan,
+          calories: form.calories ? Number(form.calories) : null,
+          protein: form.protein ? Number(form.protein) : null,
+          carbs: form.carbs ? Number(form.carbs) : null,
+          fat: form.fat ? Number(form.fat) : null,
+          restrictions: form.diet_restrictions,
+        };
+      } else if (type === "workout") {
+        typeDetails.workout_details = {
+          routine: form.workout_routine,
+          frequency: form.workout_frequency,
+          duration: form.workout_duration,
+          intensity: form.workout_intensity,
+        };
+      }
+
+      const payload = {
+        type,
+        title: form.title,
+        description: form.description,
+        start_date: form.start_date,
+        end_date: form.end_date || null,
+        status: "active",
+        ...typeDetails,
+      };
+
+      const res = await fetch(`/api/patients/${patientId}/prescriptions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Erro ao salvar prescrição");
+      }
+
+      setSaveSuccess(true);
+      setForm({
+        title: "",
+        description: "",
+        start_date: new Date().toISOString().split("T")[0],
+        end_date: "",
+        drug: "",
+        dosage: "",
+        frequency: "",
+        duration: "",
+        instructions: "",
+        diet_plan: "",
+        calories: "",
+        protein: "",
+        carbs: "",
+        fat: "",
+        diet_restrictions: "",
+        workout_routine: "",
+        workout_frequency: "",
+        workout_duration: "",
+        workout_intensity: "",
+      });
+    } catch (err) {
+      setSaveError(
+        err instanceof Error ? err.message : "Erro ao salvar prescrição"
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -297,11 +389,28 @@ export default function PrescricoesPage() {
         </Card>
       </div>
 
+      {/* Save Feedback */}
+      {saveSuccess && (
+        <Card className="mt-6 border border-success/20 bg-success/5">
+          <p className="text-success text-sm">Prescrição salva com sucesso!</p>
+        </Card>
+      )}
+      {saveError && (
+        <Card className="mt-6 border border-error/20 bg-error/5">
+          <p className="text-error text-sm">{saveError}</p>
+        </Card>
+      )}
+
       {/* Save */}
       <div className="flex justify-end mt-6">
-        <Button variant="premium" onClick={handleSave} className="gap-2">
+        <Button
+          variant="premium"
+          onClick={handleSave}
+          className="gap-2"
+          disabled={saving}
+        >
           <Save size={16} />
-          Salvar Prescrição
+          {saving ? "Salvando..." : "Salvar Prescrição"}
         </Button>
       </div>
     </div>

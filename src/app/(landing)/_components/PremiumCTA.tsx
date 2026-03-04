@@ -77,8 +77,14 @@ export function PremiumCTA() {
             transition={{ duration: 0.2 }}
             className="group relative"
           >
-            <Button variant="premium" size="lg" className="min-w-[260px] text-lg relative z-10">
-              Agendar Consulta
+            <Button asChild variant="premium" size="lg" className="min-w-[260px] text-lg relative z-10">
+              <Link
+                href="https://calendar.google.com/calendar/appointments/schedules/AcZssZ304GQnQvezrYe8wYoeIY3Z9jumbUKc7oHPExOJWnWI2pt3lNbq80np2s8J7fydjXTDGCpuRxo1?gv=true"
+                target="_blank"
+                rel="noreferrer"
+              >
+                Agendar Consulta
+              </Link>
             </Button>
           </motion.div>
         </motion.div>

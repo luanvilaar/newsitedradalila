@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { SkeletonTable } from "@/components/ui/Skeleton";
-import { Users, Search, Plus, MoreVertical, Trash2 } from "lucide-react";
+import { Tabs } from "@/components/ui/Tabs";
+import { Users, Search, Plus, MoreVertical, Trash2, RotateCcw } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
@@ -196,13 +197,136 @@ export default function PacientesListPage() {
     }
   }
 
-  const filtered = patients.filter(
+  async function handleRestore(id: string) {
+    try {
+      const res = await fetch(`/api/patients/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "active" }),
+      });
+      if (!res.ok) throw new Error("Failed to restore");
+      fetchPatients();
+    } catch (err) {
+      console.error("Error restoring patient:", err);
+    }
+  }
+
+  const filteredActive = patients.filter(
     (p) =>
       p.status !== "archived" &&
       (p.full_name.toLowerCase().includes(search.toLowerCase()) ||
         p.phone.includes(search) ||
         p.cpf.includes(search))
   );
+
+  const filteredArchived = patients.filter(
+    (p) =>
+      p.status === "archived" &&
+      (p.full_name.toLowerCase().includes(search.toLowerCase()) ||
+        p.phone.includes(search) ||
+        p.cpf.includes(search))
+  );
+
+  function renderTable(list: Patient[], mode: "active" | "archived") {
+    return (
+      <Card padding="none">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border-light">
+                <th className="text-left text-xs font-medium text-text-muted uppercase tracking-wider px-6 py-4">
+                  Nome
+                </th>
+                <th className="text-left text-xs font-medium text-text-muted uppercase tracking-wider px-6 py-4 hidden sm:table-cell">
+                  Telefone
+                </th>
+                <th className="text-left text-xs font-medium text-text-muted uppercase tracking-wider px-6 py-4 hidden md:table-cell">
+                  CPF
+                </th>
+                <th className="text-left text-xs font-medium text-text-muted uppercase tracking-wider px-6 py-4">
+                  Status
+                </th>
+                <th className="text-right px-6 py-4" />
+              </tr>
+            </thead>
+            <tbody>
+              {list.map((patient) => (
+                <tr
+                  key={patient.id}
+                  className="border-b border-border-light last:border-0 hover:bg-surface/50 transition-colors"
+                >
+                  <td className="px-6 py-4">
+                    <Link
+                      href={`/admin/pacientes/${patient.id}`}
+                      className="text-sm font-medium text-text-primary hover:text-accent-gold transition-colors"
+                    >
+                      {patient.full_name}
+                    </Link>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-text-secondary hidden sm:table-cell">
+                    {patient.phone || "—"}
+                  </td>
+                  <td className="px-6 py-4 text-sm text-text-secondary hidden md:table-cell">
+                    {patient.cpf || "—"}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-[var(--radius-full)] text-xs font-medium ${
+                        patient.status === "active"
+                          ? "bg-success/10 text-success"
+                          : "bg-text-muted/10 text-text-muted"
+                      }`}
+                    >
+                      {patient.status === "active" ? "Ativo" : "Inativo"}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <Link href={`/admin/pacientes/${patient.id}`}>
+                        <Button variant="ghost" size="sm">
+                          <MoreVertical size={16} />
+                        </Button>
+                      </Link>
+                      {mode === "active" ? (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setDeleteConfirm(patient.id)}
+                        >
+                          <Trash2 size={16} className="text-error/60" />
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRestore(patient.id)}
+                        >
+                          <RotateCcw size={16} className="text-success/70" />
+                        </Button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {list.length === 0 && (
+          <div className="text-center py-12">
+            <Users size={32} className="mx-auto text-text-muted mb-3" />
+            <p className="text-text-secondary text-sm">
+              {search
+                ? "Nenhum paciente encontrado."
+                : mode === "archived"
+                  ? "Nenhum paciente na lixeira."
+                  : "Nenhum paciente cadastrado."}
+            </p>
+          </div>
+        )}
+      </Card>
+    );
+  }
 
   return (
     <div>
@@ -256,90 +380,20 @@ export default function PacientesListPage() {
           <p className="text-error text-sm">{error}</p>
         </Card>
       ) : (
-        <Card padding="none">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-border-light">
-                  <th className="text-left text-xs font-medium text-text-muted uppercase tracking-wider px-6 py-4">
-                    Nome
-                  </th>
-                  <th className="text-left text-xs font-medium text-text-muted uppercase tracking-wider px-6 py-4 hidden sm:table-cell">
-                    Telefone
-                  </th>
-                  <th className="text-left text-xs font-medium text-text-muted uppercase tracking-wider px-6 py-4 hidden md:table-cell">
-                    CPF
-                  </th>
-                  <th className="text-left text-xs font-medium text-text-muted uppercase tracking-wider px-6 py-4">
-                    Status
-                  </th>
-                  <th className="text-right px-6 py-4" />
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((patient) => (
-                  <tr
-                    key={patient.id}
-                    className="border-b border-border-light last:border-0 hover:bg-surface/50 transition-colors"
-                  >
-                    <td className="px-6 py-4">
-                      <Link
-                        href={`/admin/pacientes/${patient.id}`}
-                        className="text-sm font-medium text-text-primary hover:text-accent-gold transition-colors"
-                      >
-                        {patient.full_name}
-                      </Link>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-text-secondary hidden sm:table-cell">
-                      {patient.phone || "—"}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-text-secondary hidden md:table-cell">
-                      {patient.cpf || "—"}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-0.5 rounded-[var(--radius-full)] text-xs font-medium ${
-                          patient.status === "active"
-                            ? "bg-success/10 text-success"
-                            : "bg-text-muted/10 text-text-muted"
-                        }`}
-                      >
-                        {patient.status === "active" ? "Ativo" : "Inativo"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        <Link href={`/admin/pacientes/${patient.id}`}>
-                          <Button variant="ghost" size="sm">
-                            <MoreVertical size={16} />
-                          </Button>
-                        </Link>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setDeleteConfirm(patient.id)}
-                        >
-                          <Trash2 size={16} className="text-error/60" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {filtered.length === 0 && (
-            <div className="text-center py-12">
-              <Users size={32} className="mx-auto text-text-muted mb-3" />
-              <p className="text-text-secondary text-sm">
-                {search
-                  ? "Nenhum paciente encontrado."
-                  : "Nenhum paciente cadastrado."}
-              </p>
-            </div>
-          )}
-        </Card>
+        <Tabs
+          tabs={[
+            {
+              id: "active",
+              label: "Ativos",
+              content: renderTable(filteredActive, "active"),
+            },
+            {
+              id: "trash",
+              label: "Lixeira",
+              content: renderTable(filteredArchived, "archived"),
+            },
+          ]}
+        />
       )}
 
       {/* Create Patient Modal */}

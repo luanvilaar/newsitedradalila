@@ -134,8 +134,29 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create auth user using admin client
     const adminClient = createAdminClient();
+
+    const { data: existingProfile, error: cpfLookupError } = await supabase
+      .from("profiles")
+      .select("id")
+      .eq("cpf", cpf)
+      .maybeSingle();
+
+    if (cpfLookupError) {
+      return NextResponse.json(
+        { error: "Erro ao validar CPF. Tente novamente." },
+        { status: 400 }
+      );
+    }
+
+    if (existingProfile) {
+      return NextResponse.json(
+        { error: "CPF já cadastrado." },
+        { status: 409 }
+      );
+    }
+
+    // Create auth user using admin client
     const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
       email,
       password,
@@ -161,8 +182,14 @@ export async function POST(request: Request) {
       });
 
     if (profileError) {
+      await adminClient.auth.admin.deleteUser(authData.user.id);
       return NextResponse.json(
-        { error: profileError.message },
+        {
+          error:
+            profileError.code === "23505"
+              ? "CPF ou email já cadastrado."
+              : profileError.message,
+        },
         { status: 400 }
       );
     }
@@ -188,6 +215,7 @@ export async function POST(request: Request) {
       .single();
 
     if (patientError) {
+      await adminClient.auth.admin.deleteUser(authData.user.id);
       return NextResponse.json(
         { error: patientError.message },
         { status: 400 }

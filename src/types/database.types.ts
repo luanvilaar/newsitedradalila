@@ -34,6 +34,17 @@ export interface Patient {
   } | null;
   status: "active" | "inactive" | "archived";
   notes: string | null;
+  weight: number | null;
+  height: number | null;
+  bmi: number | null;
+  body_fat_percentage: number | null;
+  muscle_mass: number | null;
+  bone_mass: number | null;
+  visceral_fat: number | null;
+  water_percentage: number | null;
+  basal_metabolic_rate: number | null;
+  metabolic_age: number | null;
+  bioimpedance_updated_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -78,6 +89,18 @@ export interface BioimpedanceRecord {
   segmental_analysis: Record<string, unknown> | null;
   notes: string | null;
   measurement_date: string;
+  created_at: string;
+}
+
+export interface BioimpedanceExam {
+  id: string;
+  patient_id: string;
+  uploaded_by: string;
+  bioimpedance_record_id: string | null;
+  pdf_path: string;
+  parsed_data: Record<string, unknown> | null;
+  parser_status: "pending" | "success" | "empty" | "failed";
+  parser_error: string | null;
   created_at: string;
 }
 
@@ -166,4 +189,25 @@ export interface PatientHistory {
   entity_id: string | null;
   changes: Record<string, unknown> | null;
   created_at: string;
+}
+
+export type FinancialRecordType = "invoice" | "cashflow";
+export type TransactionType = "entry" | "exit";
+export type InvoiceStatus = "pending" | "issued" | "cancelled";
+
+export interface FinancialRecord {
+  id: string;
+  created_by: string;
+  record_type: FinancialRecordType;
+  transaction_type: TransactionType | null;
+  category: string | null;
+  description: string | null;
+  amount: number;
+  occurred_at: string;
+  invoice_number: string | null;
+  invoice_status: InvoiceStatus | null;
+  patient_name: string | null;
+  patient_document: string | null;
+  created_at: string;
+  updated_at: string;
 }

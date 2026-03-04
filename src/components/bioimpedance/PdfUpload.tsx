@@ -5,14 +5,23 @@ import { Upload, AlertCircle, CheckCircle } from "lucide-react";
 
 interface PdfUploadProps {
   patientId: string;
-  onDataExtracted: (data: any) => void;
+  onDataExtracted: (
+    data: Record<string, string | number | null | undefined>,
+    meta?: {
+      examId?: string;
+      extractedFields?: string[];
+      parserStatus?: "success" | "empty" | "failed";
+    }
+  ) => void;
   isLoading?: boolean;
+  onProcessingChange?: (processing: boolean) => void;
 }
 
 export function PdfUploadBioimpedance({
   patientId,
   onDataExtracted,
   isLoading = false,
+  onProcessingChange,
 }: PdfUploadProps) {
   const [isDragActive, setIsDragActive] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -31,30 +40,37 @@ export function PdfUploadBioimpedance({
     }
 
     setIsProcessing(true);
+    onProcessingChange?.(true);
     setError(null);
     setSuccess(null);
 
     try {
       const formData = new FormData();
       formData.append("file", file);
+      formData.append("patientId", patientId);
+      formData.append("keepHistory", "true");
 
-      const response = await fetch(
-        `/api/patients/${patientId}/bioimpedance/extract-pdf`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const response = await fetch(`/api/bioimpedance/upload`, {
+        method: "POST",
+        body: formData,
+      });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Erro ao processar PDF");
+        const detailSuffix = errorData.details ? ` (${errorData.details})` : "";
+        throw new Error((errorData.error || "Erro ao processar PDF") + detailSuffix);
       }
 
       const result = await response.json();
 
       if (result.data) {
-        onDataExtracted(result.data);
+        onDataExtracted(result.data, {
+          examId: result.exam?.id,
+          extractedFields: Array.isArray(result.extractedFields)
+            ? result.extractedFields
+            : [],
+          parserStatus: result.exam?.parser_status,
+        });
         setSuccess(
           result.message || "PDF processado com sucesso! Revise os dados."
         );
@@ -67,6 +83,7 @@ export function PdfUploadBioimpedance({
       console.error("PDF processing error:", err);
     } finally {
       setIsProcessing(false);
+      onProcessingChange?.(false);
     }
   }
 

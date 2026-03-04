@@ -1,43 +1,48 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import { Card } from "@/components/ui/Card";
 import { SkeletonCard } from "@/components/ui/Skeleton";
-import { Users, Calendar, Activity, FileText } from "lucide-react";
+import { Users, Calendar, Activity, FileText, Clock } from "lucide-react";
+
+const DashboardCharts = dynamic(
+  () => import("./_components/DashboardCharts").then((m) => m.DashboardCharts),
+  { ssr: false, loading: () => <div className="mt-10 h-48 rounded-2xl bg-surface animate-pulse" /> }
+);
 
 interface AdminStats {
   totalPatients: number;
   todayServices: number;
   monthlyBioimpedance: number;
   recentDocuments: number;
+  recentActivity: {
+    id: string;
+    action: string;
+    entity_type: string;
+    created_at: string;
+    profiles?: { full_name: string };
+  }[];
 }
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<AdminStats>({
-    totalPatients: 0,
-    todayServices: 0,
-    monthlyBioimpedance: 0,
-    recentDocuments: 0,
-  });
+  const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchStats() {
       try {
-        // Fetch all patients
-        const patientsRes = await fetch("/api/patients");
-        const patients = patientsRes.ok ? await patientsRes.json() : [];
+        const res = await fetch("/api/admin/stats");
+        if (!res.ok) throw new Error("Failed to fetch stats");
 
-        setStats({
-          totalPatients: Array.isArray(patients) ? patients.length : 0,
-          todayServices: 0, // Would need service filtering by date
-          monthlyBioimpedance: 0, // Would need bioimpedance filtering
-          recentDocuments: 0, // Would need document tracking
-        });
+        const data = await res.json();
+        setStats(data);
       } catch (err) {
         console.error("Error fetching stats:", err);
-        setError(err instanceof Error ? err.message : "Erro ao carregar estatísticas");
+        setError(
+          err instanceof Error ? err.message : "Erro ao carregar estatísticas"
+        );
       } finally {
         setLoading(false);
       }
@@ -50,28 +55,43 @@ export default function AdminDashboard() {
     {
       icon: Users,
       label: "Total de Pacientes",
-      value: stats.totalPatients.toString(),
+      value: stats?.totalPatients.toString() || "0",
       description: "Pacientes cadastrados",
     },
     {
       icon: Calendar,
       label: "Consultas Hoje",
-      value: stats.todayServices.toString(),
+      value: stats?.todayServices.toString() || "0",
       description: "Agendadas para hoje",
     },
     {
       icon: Activity,
       label: "Bioimpedâncias",
-      value: stats.monthlyBioimpedance.toString(),
+      value: stats?.monthlyBioimpedance.toString() || "0",
       description: "Registros este mês",
     },
     {
       icon: FileText,
       label: "Documentos",
-      value: stats.recentDocuments.toString(),
-      description: "Uploads recentes",
+      value: stats?.recentDocuments.toString() || "0",
+      description: "Uploads este mês",
     },
   ];
+
+  const actionLabels: Record<string, string> = {
+    created: "Criou",
+    updated: "Atualizou",
+    deleted: "Removeu",
+  };
+
+  const entityLabels: Record<string, string> = {
+    anamnesis: "anamnese",
+    bioimpedance: "bioimpedância",
+    prescription: "prescrição",
+    document: "documento",
+    patient: "paciente",
+    service: "serviço",
+  };
 
   return (
     <div>
@@ -117,30 +137,59 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      {/* Recent Activity */}
-      <div className="grid lg:grid-cols-2 gap-6">
-        <Card>
-          <h2 className="font-medium text-text-primary mb-4">
-            Próximas Consultas
-          </h2>
-          <div className="text-center py-8">
-            <p className="text-text-muted text-sm">
-              Nenhuma consulta agendada.
-            </p>
-          </div>
-        </Card>
+      {/* Charts */}
+      {!loading && !error && <DashboardCharts />}
 
-        <Card>
-          <h2 className="font-medium text-text-primary mb-4">
-            Atividade Recente
-          </h2>
+      {/* Recent Activity */}
+      <Card>
+        <h2 className="font-medium text-text-primary mb-4">
+          Atividade Recente
+        </h2>
+        {loading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div
+                key={i}
+                className="h-12 bg-surface rounded-[var(--radius-md)] animate-pulse"
+              />
+            ))}
+          </div>
+        ) : stats?.recentActivity && stats.recentActivity.length > 0 ? (
+          <div className="space-y-3">
+            {stats.recentActivity.map((activity) => (
+              <div
+                key={activity.id}
+                className="flex items-center gap-3 px-4 py-3 bg-surface/50 rounded-[var(--radius-md)]"
+              >
+                <Clock size={16} className="text-text-muted shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-text-primary truncate">
+                    <span className="font-medium">
+                      {activity.profiles?.full_name || "Sistema"}
+                    </span>{" "}
+                    {actionLabels[activity.action] || activity.action}{" "}
+                    {entityLabels[activity.entity_type] || activity.entity_type}
+                  </p>
+                </div>
+                <span className="text-xs text-text-muted whitespace-nowrap">
+                  {new Date(activity.created_at).toLocaleDateString("pt-BR", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
           <div className="text-center py-8">
             <p className="text-text-muted text-sm">
               Nenhuma atividade registrada.
             </p>
           </div>
-        </Card>
-      </div>
+        )}
+      </Card>
     </div>
   );
 }
