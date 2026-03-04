@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { forwardRef, useState, useMemo, useRef, useEffect } from "react";
+import { forwardRef, useState, useMemo } from "react";
 import { cn } from "@/lib/utils/cn";
 
 /**
@@ -102,7 +102,15 @@ const BodySegmentIllustration = forwardRef<
     ref
   ) => {
     const [expandedSegment, setExpandedSegment] = useState<string | null>(null);
-    const delaysRef = useRef<Record<string, number>>({});
+
+    // Initialize random delays once per segment
+    const [segmentDelays] = useState<Record<string, number>>(() => {
+      const delays: Record<string, number> = {};
+      segments.forEach((seg) => {
+        delays[seg.segment] = 0.5 + Math.random() * 0.2;
+      });
+      return delays;
+    });
 
     // Map segments to color based on trend type
     const segmentColors = useMemo(() => {
@@ -126,18 +134,6 @@ const BodySegmentIllustration = forwardRef<
       concern: "grad-concern",
       stable: "grad-stable",
     }), []);
-
-    // Segment delays memoized for render-safe access
-    const segmentDelays = useMemo(() => {
-      const delays: Record<string, number> = {};
-      segments.forEach((seg) => {
-        if (!delaysRef.current[seg.segment]) {
-          delaysRef.current[seg.segment] = 0.5 + Math.random() * 0.2;
-        }
-        delays[seg.segment] = delaysRef.current[seg.segment];
-      });
-      return delays;
-    }, [segments]);
 
     // Get segment data by name
     const getSegmentData = (name: string): SegmentTrendData | undefined => {
