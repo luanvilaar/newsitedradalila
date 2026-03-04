@@ -22,7 +22,7 @@ export async function GET() {
     }
 
     // Get patient data
-    let { data: patient, error } = await supabase
+    const { data: patient, error } = await supabase
       .from("patients")
       .select(
         `
