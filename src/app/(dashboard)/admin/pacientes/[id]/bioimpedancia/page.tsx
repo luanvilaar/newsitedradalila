@@ -50,7 +50,7 @@ export default function BioimpedanciaAdminPage() {
       try {
         const res = await fetch(`/api/patients/${patientId}/bioimpedance`);
         if (res.ok) {
-          const data = await res.json();
+          const _data = await res.json();
           if (data && data.length > 0) {
             setLatestRecordData(data[0]);
             setShowPreview(true);

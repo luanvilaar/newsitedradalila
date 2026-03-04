@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 
-async function isAdmin(supabase: any, userId: string): Promise<boolean> {
+async function isAdmin(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<boolean> {
   const { data } = await supabase
     .from("profiles")
     .select("role")

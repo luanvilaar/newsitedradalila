@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
  * GET: Retrieve patient details (patient can only see their own, admin sees all)
  */
 
-async function isAdmin(supabase: any, userId: string): Promise<boolean> {
+async function isAdmin(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<boolean> {
   const { data } = await supabase
     .from("profiles")
     .select("role")
@@ -118,7 +118,7 @@ export async function PUT(
 
     // Update profile fields
     if (full_name || phone || cpf || birth_date) {
-      const profileUpdate: Record<string, any> = {};
+      const profileUpdate: Record<string, unknown> = {};
       if (full_name !== undefined) profileUpdate.full_name = full_name;
       if (phone !== undefined) profileUpdate.phone = phone;
       if (cpf !== undefined) profileUpdate.cpf = cpf;
@@ -138,7 +138,7 @@ export async function PUT(
     }
 
     // Update patient fields
-    const patientUpdate: Record<string, any> = {};
+    const patientUpdate: Record<string, unknown> = {};
     if (address !== undefined) patientUpdate.address = address;
     if (emergency_contact !== undefined) patientUpdate.emergency_contact = emergency_contact;
     if (insurance_info !== undefined) patientUpdate.insurance_info = insurance_info;

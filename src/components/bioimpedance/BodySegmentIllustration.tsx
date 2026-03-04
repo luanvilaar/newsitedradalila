@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { forwardRef, useState, useMemo } from "react";
+import { forwardRef, useState, useMemo, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils/cn";
 
 /**
@@ -102,6 +102,7 @@ const BodySegmentIllustration = forwardRef<
     ref
   ) => {
     const [expandedSegment, setExpandedSegment] = useState<string | null>(null);
+    const delaysRef = useRef<Record<string, number>>({});
 
     // Map segments to color based on trend type
     const segmentColors = useMemo(() => {
@@ -115,6 +116,27 @@ const BodySegmentIllustration = forwardRef<
     // Segments with significant changes (for pulse animation)
     const significantSegments = useMemo(() => {
       return segments.filter((s) => s.hasSignificantChange).map((s) => s.segment);
+    }, [segments]);
+
+    // Premium gradient IDs per type - must be before any early returns
+    const gradIds = useMemo(() => ({
+      muscle: "grad-muscle",
+      fat: "grad-fat",
+      water: "grad-water",
+      concern: "grad-concern",
+      stable: "grad-stable",
+    }), []);
+
+    // Segment delays memoized for render-safe access
+    const segmentDelays = useMemo(() => {
+      const delays: Record<string, number> = {};
+      segments.forEach((seg) => {
+        if (!delaysRef.current[seg.segment]) {
+          delaysRef.current[seg.segment] = 0.5 + Math.random() * 0.2;
+        }
+        delays[seg.segment] = delaysRef.current[seg.segment];
+      });
+      return delays;
     }, [segments]);
 
     // Get segment data by name
@@ -156,19 +178,15 @@ const BodySegmentIllustration = forwardRef<
     const s = sizeConfig.scale;
     const cx = sizeConfig.width / 2; // 80 for md
 
-    // Premium gradient IDs per type
-    const gradIds = useMemo(() => ({
-      muscle: "grad-muscle",
-      fat: "grad-fat",
-      water: "grad-water",
-      concern: "grad-concern",
-      stable: "grad-stable",
-    }), []);
-
     const getGradId = (segName: string) => {
       const seg = segments.find((s) => s.segment === segName);
       const type = seg?.type ?? "stable";
       return `url(#${gradIds[type]})`;
+    };
+
+    // Get consistent random delay for segment animation
+    const getSegmentDelay = (segName: string) => {
+      return segmentDelays[segName] ?? 0.5;
     };
 
     return (
@@ -729,7 +747,7 @@ const BodySegmentIllustration = forwardRef<
                   key={seg.segment}
                   initial={{ opacity: 0, scale: 0.7 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.5 + Math.random() * 0.2 }}
+                  transition={{ delay: getSegmentDelay(seg.segment) }}
                 >
                   {/* Label background pill */}
                   <rect

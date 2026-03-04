@@ -12,7 +12,7 @@ interface Service {
   status: string;
   scheduled_date?: string;
   completed_date?: string;
-  details?: any;
+  details?: unknown;
 }
 
 export default function ServicosPage() {
@@ -26,7 +26,7 @@ export default function ServicosPage() {
         const res = await fetch("/api/patients/current/services");
         if (!res.ok) throw new Error("Failed to fetch services");
 
-        const data = await res.json();
+        const _data = await res.json();
         setServices(data);
       } catch (err) {
         console.error("Error fetching services:", err);

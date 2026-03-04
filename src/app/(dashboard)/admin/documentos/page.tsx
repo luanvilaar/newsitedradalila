@@ -65,7 +65,7 @@ export default function DocumentosPage() {
       // Let's create a simple fetch by querying all documents
       const res = await fetch("/api/documents");
       if (res.ok) {
-        const data = await res.json();
+        const _data = await res.json();
         setDocuments(Array.isArray(data) ? data : []);
       }
     } catch (err) {
@@ -79,8 +79,8 @@ export default function DocumentosPage() {
     try {
       const res = await fetch("/api/patients");
       if (res.ok) {
-        const data = await res.json();
-        const mapped = (Array.isArray(data) ? data : []).map((p: any) => ({
+        const _data = await res.json();
+        const mapped = (Array.isArray(data) ? data : []).map((p: unknown) => ({
           id: p.id,
           full_name: p.profiles?.full_name || "Sem nome",
         }));
@@ -153,7 +153,7 @@ export default function DocumentosPage() {
         });
 
         if (!res.ok) {
-          const data = await res.json();
+          const _data = await res.json();
           throw new Error(data.error || `Erro ao enviar ${file.name}`);
         }
       }

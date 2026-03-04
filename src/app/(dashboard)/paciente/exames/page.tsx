@@ -11,7 +11,7 @@ interface Document {
   file_path: string;
   file_type: string;
   uploaded_at: string;
-  parsed_data?: any;
+  parsed_data?: unknown;
 }
 
 export default function ExamesPage() {

@@ -87,7 +87,7 @@ export default function PacientesListPage() {
     setLoadingCep(true);
     try {
       const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
-      const data = await response.json();
+      const _data = await response.json();
 
       if (data.erro) {
         setCepError("CEP não encontrado");
@@ -167,7 +167,7 @@ export default function PacientesListPage() {
       });
 
       if (!res.ok) {
-        const data = await res.json();
+        const _data = await res.json();
         throw new Error(data.error || "Erro ao criar paciente");
       }
 

@@ -82,11 +82,11 @@ export function AiPdfAnalysis({
       });
 
       if (!res.ok) {
-        const data = await res.json();
+        const _data = await res.json();
         throw new Error(data.error || "Erro ao analisar com IA");
       }
 
-      const data = await res.json();
+      const _data = await res.json();
       setAnalysis(data.analysis);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro inesperado");

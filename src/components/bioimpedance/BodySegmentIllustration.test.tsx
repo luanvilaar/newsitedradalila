@@ -115,7 +115,7 @@ describe("BodySegmentIllustration", () => {
   });
 
   it("calls onSegmentClick when segment is clicked", async () => {
-    const user = userEvent.setup();
+    const _user = userEvent.setup();
     const handleClick = jest.fn();
 
     render(
@@ -172,7 +172,7 @@ describe("BodySegmentIllustration", () => {
   });
 
   it("is keyboard accessible", async () => {
-    const user = userEvent.setup();
+    const _user = userEvent.setup();
     const handleClick = jest.fn();
 
     render(

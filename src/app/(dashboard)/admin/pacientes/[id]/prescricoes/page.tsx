@@ -127,7 +127,7 @@ export default function PrescricoesPage() {
       });
 
       if (!res.ok) {
-        const data = await res.json();
+        const _data = await res.json();
         throw new Error(data.error || "Erro ao salvar prescrição");
       }
 

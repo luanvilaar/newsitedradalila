@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import pdfParse from "pdf-parse/legacy/index.js";
+import { PDFDocument } from "pdf-lib";
 
 /**
  * POST: Extract bioimpedance data from PDF
@@ -259,7 +261,6 @@ export async function POST(
     let extractedText = "";
     try {
       // Use pdf-parse correctly to extract text from PDF
-      const pdfParse = require("pdf-parse");
       const pdfData = await pdfParse(buffer);
 
       // Extract text from all pages
@@ -267,7 +268,6 @@ export async function POST(
         extractedText = pdfData.text;
       } else if (pdfData.numpages && pdfData.numpages > 0) {
         // Fallback: try to extract from page structure
-        const { PDFDocument } = await import("pdf-lib");
         console.warn("No text extracted, attempting page structure extraction");
       }
 

@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
  * POST: Upload document to Supabase Storage
  */
 
-async function isAdmin(supabase: any, userId: string): Promise<boolean> {
+async function isAdmin(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<boolean> {
   const { data } = await supabase
     .from("profiles")
     .select("role")

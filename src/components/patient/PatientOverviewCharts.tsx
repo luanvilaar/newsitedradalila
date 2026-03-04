@@ -190,7 +190,7 @@ export function PatientOverviewCharts({ patientId }: { patientId: string }) {
         ]);
 
         if (bioRes.status === "fulfilled" && bioRes.value.ok) {
-          const data = await bioRes.value.json();
+          const _data = await bioRes.value.json();
           setBioRecords(
             (Array.isArray(data) ? data : []).sort(
               (a: BioRecord, b: BioRecord) =>
@@ -201,7 +201,7 @@ export function PatientOverviewCharts({ patientId }: { patientId: string }) {
         }
 
         if (prescRes.status === "fulfilled" && prescRes.value.ok) {
-          const data = await prescRes.value.json();
+          const _data = await prescRes.value.json();
           setPrescriptions(Array.isArray(data) ? data : []);
         }
       } catch {
