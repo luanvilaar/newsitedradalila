@@ -3,6 +3,10 @@ import { generateText } from "ai";
 import { NextRequest } from "next/server";
 import { checkRateLimit } from "@/lib/security/rate-limit";
 import { CLAUDIA_SYSTEM_PROMPT, buildClaudiaContext } from "@/lib/ai/claudia-system-prompt";
+import {
+  getAvailableSlots,
+  isCalendarIntegrationActive,
+} from "@/lib/google-calendar";
 
 export const runtime = "nodejs";
 
@@ -57,15 +61,6 @@ function readOpenAiKey(): string | null {
   return process.env.OPENAI_API_KEY || null;
 }
 
-function toText(value: unknown): string {
-  if (value === null || value === undefined) return "null";
-  if (typeof value === "string") return value.trim() || "null";
-  try {
-    return JSON.stringify(value, null, 2);
-  } catch {
-    return String(value);
-  }
-}
 
 
 function extractAgentMeta(rawText: string): { cleanText: string; meta: AgentMeta } {
@@ -200,6 +195,41 @@ function localClaudiaReply(
   };
 }
 
+// ── Detectar se o usuário quer agendar ─────────────────────────────────────
+function detectsSchedulingIntent(text: string): boolean {
+  const normalized = text.toLowerCase();
+  const keywords = [
+    "agendar", "agendamento", "marcar", "consulta",
+    "horário", "horario", "disponível", "disponivel",
+    "quando posso", "data", "agenda", "cancelar",
+    "desmarcar", "remarcar",
+  ];
+  return keywords.some((kw) => normalized.includes(kw));
+}
+
+// ── Buscar slots reais do Google Calendar se possível ──────────────────────
+async function enrichContextWithSlots(
+  ctx: ChatSystemContext | undefined,
+  userMessage: string
+): Promise<ChatSystemContext> {
+  const enriched: ChatSystemContext = { ...ctx };
+
+  if (detectsSchedulingIntent(userMessage) && isCalendarIntegrationActive()) {
+    try {
+      const slots = await getAvailableSlots(90); // 3 meses de disponibilidade
+      // Pegar os próximos 6 slots para mostrar ao paciente
+      const topSlots = slots.slice(0, 6);
+      if (topSlots.length > 0) {
+        enriched.slots_json_or_text = topSlots;
+      }
+    } catch (error) {
+      console.error("Erro ao buscar slots para o chat:", error);
+    }
+  }
+
+  return enriched;
+}
+
 export async function POST(req: NextRequest) {
   // ── Rate limiting: máximo 20 requisições por minuto por IP ────────────────
   const ip =
@@ -232,8 +262,11 @@ export async function POST(req: NextRequest) {
     const latestUserMessage =
       [...messages].reverse().find((item) => item.role === "user")?.content || "";
 
+    // Enriquecer contexto com slots reais do Google Calendar
+    const enrichedContext = await enrichContextWithSlots(systemContext, latestUserMessage);
+
     if (!openai) {
-      const fallback = localClaudiaReply(latestUserMessage, systemContext);
+      const fallback = localClaudiaReply(latestUserMessage, enrichedContext);
       return Response.json({
         message: fallback.message,
         rawMessage: `${fallback.message}\n<<AGENT_META ${JSON.stringify(fallback.meta)} >>`,
@@ -251,7 +284,7 @@ export async function POST(req: NextRequest) {
     // Gerar resposta com OpenAI
     const { text } = await generateText({
       model: openai("gpt-4o"),
-      system: `${CLAUDIA_SYSTEM_PROMPT}\n\n${buildClaudiaContext(systemContext)}`,
+      system: `${CLAUDIA_SYSTEM_PROMPT}\n\n${buildClaudiaContext(enrichedContext)}`,
       messages: formattedMessages,
     });
 

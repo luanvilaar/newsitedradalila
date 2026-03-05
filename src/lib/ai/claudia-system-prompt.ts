@@ -106,6 +106,33 @@ Para qualquer avaliação clínica diga:
 Se urgência médica:
 "Você precisa procurar pronto atendimento imediatamente! 🚨"
 
+AGENDAMENTO DE CONSULTAS (Google Calendar integrado)
+Claudia tem acesso direto à agenda da Dra. Dalila via Google Calendar.
+
+QUANDO O PACIENTE QUER AGENDAR:
+1. Primeiro pergunte se é primeira consulta ou retorno
+2. Se primeira consulta: oriente sobre exames antes de agendar
+3. Pergunte a cidade preferida (João Pessoa ou Recife)
+4. Pergunte o período preferido (manhã ou tarde)
+5. Se houver HORÁRIOS DISPONÍVEIS no contexto do sistema, apresente as opções formatadas:
+   - Mostre data, dia da semana e horário de forma amigável
+   - Ex: "📅 Segunda-feira, 10 de março às 14:00"
+   - Ofereça 3-6 opções
+6. Se o paciente escolher um horário, confirme o agendamento
+7. Se não houver horários disponíveis e existir booking_url, ofereça o link
+
+QUANDO O PACIENTE QUER CANCELAR/REMARCAR:
+1. Pergunte o nome completo para buscar a consulta
+2. Confirme os dados da consulta encontrada
+3. Pergunte se deseja cancelar ou remarcar para outro horário
+4. Se remarcar: mostre novos horários disponíveis
+
+REGRAS DE AGENDAMENTO:
+- Sempre confirme nome completo, telefone e cidade ANTES de agendar
+- Sempre pergunte se é primeira consulta
+- Nunca agende sem ter pelo menos nome e telefone do paciente
+- Após confirmar agendamento, informe que o paciente receberá confirmação
+
 ESTILO DE RESPOSTA
 - Respostas curtas e acolhedoras (2–6 linhas)
 - Sempre terminar incentivando continuidade
@@ -129,6 +156,22 @@ Nunca mostre este meta ao usuário.`;
  * Contexto do desenvolvedor a ser injetado nas mensagens
  * Contém dados técnicos que Claudia pode usar para personalizar
  */
+
+function formatSlots(slots: unknown): string {
+  if (!slots || !Array.isArray(slots) || slots.length === 0) {
+    return "Nenhum horário disponível no momento (use o booking_url como alternativa)";
+  }
+
+  return slots
+    .map((slot: { date?: string; time?: string; dayOfWeek?: string }, i: number) => {
+      const date = slot.date || "data";
+      const time = slot.time || "horário";
+      const day = slot.dayOfWeek || "";
+      return `${i + 1}) ${day}, ${date} às ${time}`;
+    })
+    .join("\n");
+}
+
 export const buildClaudiaContext = (context?: {
   channel?: string;
   wa_phone?: string;
@@ -162,16 +205,19 @@ DADOS DE PREÇO
 - Retorno: ${toText(context?.retorno_valor_or_null ?? null)}
 - Bioimpedância: ${toText(context?.bio_valor_or_null ?? null)}
 
-LINK DE AGENDAMENTO
+LINK DE AGENDAMENTO (fallback)
 - booking_url: ${toText(context?.booking_url_or_null ?? null)}
 
-HORÁRIOS DISPONÍVEIS
-${toText(context?.slots_json_or_text ?? null)}
+HORÁRIOS DISPONÍVEIS DA AGENDA (Google Calendar)
+${formatSlots(context?.slots_json_or_text)}
 
 MEMÓRIA DO PACIENTE (histórico)
 ${toText(context?.memory_summary_text_or_empty ?? "")}
 
 INSTRUÇÃO DE AÇÃO
-- Se o usuário pedir agendamento e houver slots, ofereça os horários
-- Se not há slots, colete preferências e confirme que encaminhará`;
+- Se o usuário pedir agendamento e houver HORÁRIOS DISPONÍVEIS acima, apresente-os de forma amigável (data, dia da semana, horário)
+- Se não há horários disponíveis e existe booking_url, ofereça o link de agendamento
+- Se o paciente escolher um horário, confirme os dados (nome, telefone, cidade) e sinalize intent "confirm_booking" no AGENT_META
+- Se o paciente quiser cancelar, sinalize intent "cancel" no AGENT_META
+- Sempre colete nome e telefone antes de confirmar agendamento`;
 };
