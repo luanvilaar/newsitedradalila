@@ -6,6 +6,7 @@ import { MethodGrid } from "./_components/MethodGrid";
 import { Locations } from "./_components/Locations";
 import { PremiumCTA } from "./_components/PremiumCTA";
 import { Footer } from "./_components/Footer";
+import { ChatWidget } from "@/components/shared/ChatWidget";
 
 export default function LandingPage() {
   return (
@@ -26,6 +27,7 @@ export default function LandingPage() {
       </div>
       <PremiumCTA />
       <Footer />
+      <ChatWidget />
     </main>
   );
 }
