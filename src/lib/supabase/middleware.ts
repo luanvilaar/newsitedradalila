@@ -24,7 +24,6 @@ export async function updateSession(request: NextRequest) {
     supabaseKey === "your_supabase_anon_key"
   ) {
     if (isPublicRoute) return supabaseResponse;
-    // Without Supabase, redirect protected routes to login
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
@@ -69,24 +68,25 @@ export async function updateSession(request: NextRequest) {
     .eq("id", user.id)
     .single();
 
-  // If profile fetch fails, allow access (don't block with infinite redirects)
-  if (profileError) {
-    console.error("Profile fetch error:", profileError);
-    return response;
+  // SEGURANÇA: fail-closed — se perfil não pôde ser verificado, NEGAR acesso.
+  // Nunca permitir acesso a áreas protegidas sem confirmação de role.
+  if (profileError || !profile) {
+    console.error("Profile fetch error in middleware (fail-closed):", profileError);
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
   }
 
-  const userRole = profile?.role;
+  const userRole = profile.role;
 
-  // Only redirect if accessing wrong dashboard
+  // Role-based dashboard routing
   if (pathname.startsWith("/admin")) {
-    // Admin dashboard - only admins allowed
     if (userRole !== "admin") {
       const url = request.nextUrl.clone();
       url.pathname = "/paciente";
       return NextResponse.redirect(url);
     }
   } else if (pathname.startsWith("/paciente")) {
-    // Patient dashboard - only patients allowed
     if (userRole !== "patient") {
       const url = request.nextUrl.clone();
       url.pathname = "/admin";

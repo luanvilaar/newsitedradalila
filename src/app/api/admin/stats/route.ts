@@ -1,38 +1,12 @@
-import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
-
-async function isAdmin(supabase: Awaited<ReturnType<typeof createClient>>, userId: string): Promise<boolean> {
-  const { data } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .single();
-
-  return data?.role === "admin";
-}
+import { requireAdmin } from "@/lib/security/auth-helpers";
 
 export async function GET() {
   try {
-    const supabase = await createClient();
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
-    }
-
-    const admin = await isAdmin(supabase, user.id);
-    if (!admin) {
-      return NextResponse.json(
-        { error: "Forbidden: Admin only" },
-        { status: 403 }
-      );
-    }
+    const { supabase } = auth;
 
     // Fetch all stats in parallel
     const today = new Date();

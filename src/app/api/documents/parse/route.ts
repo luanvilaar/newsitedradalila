@@ -41,11 +41,28 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { documentId, filePath } = body;
+    const { documentId, filePath } = body as {
+      documentId?: string;
+      filePath?: string;
+    };
 
     if (!documentId || !filePath) {
       return NextResponse.json(
         { error: "Missing required fields: documentId, filePath" },
+        { status: 400 }
+      );
+    }
+
+    // SEGURANÇA: Protege contra Path Traversal
+    // filePath deve conter apenas UUID/timestamp + nome de arquivo sem navegação de diretório
+    if (
+      filePath.includes("..") ||
+      filePath.includes("//") ||
+      filePath.startsWith("/") ||
+      !/^[a-f0-9-]{36}\/[^/]+$/.test(filePath) // formato: {uuid}/{arquivo}
+    ) {
+      return NextResponse.json(
+        { error: "Invalid file path." },
         { status: 400 }
       );
     }

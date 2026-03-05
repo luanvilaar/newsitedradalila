@@ -1,13 +1,41 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { extractInboundMessage } from "@/lib/whatsapp/avisa";
+import { validateWebhookSecret } from "@/lib/security/auth-helpers";
 
 export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
+  // ────────────────────────────────────────────────────────────
+  // SEGURANÇA: Validar secret do webhook antes de qualquer ação
+  // Configure AVISA_WEBHOOK_SECRET no .env.local
+  // ────────────────────────────────────────────────────────────
+  const receivedSecret =
+    req.headers.get("x-webhook-secret") ||
+    req.headers.get("x-avisa-secret") ||
+    req.headers.get("authorization")?.replace("Bearer ", "");
+
+  const expectedSecret = process.env.AVISA_WEBHOOK_SECRET;
+
+  if (!expectedSecret) {
+    // Se o secret não está configurado, rejeitar em produção
+    console.error("[avisa-webhook] AVISA_WEBHOOK_SECRET não configurado. Rejeitando requisição.");
+    return NextResponse.json(
+      { error: "Webhook not configured" },
+      { status: 503 }
+    );
+  }
+
+  if (!validateWebhookSecret(receivedSecret, expectedSecret)) {
+    console.warn("[avisa-webhook] Tentativa não autorizada: secret inválido ou ausente");
+    return NextResponse.json(
+      { error: "Unauthorized" },
+      { status: 401 }
+    );
+  }
+
   try {
     const payload = (await req.json()) as unknown;
-    console.log("[avisa-webhook] payload received:", JSON.stringify(payload));
 
     const message = extractInboundMessage(payload);
 
@@ -18,8 +46,6 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-
-    console.log("[avisa-webhook] parsed message:", JSON.stringify(message));
 
     const adminClient = createAdminClient();
 

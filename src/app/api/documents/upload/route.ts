@@ -74,9 +74,16 @@ export async function POST(request: Request) {
     const buffer = await file.arrayBuffer();
     const uint8Array = new Uint8Array(buffer);
 
+    // SEGURANÇA: Sanitiza o nome do arquivo para evitar path injection
+    // Remove tudo que não é alfanumérico, ponto, hífen ou underscore
+    const sanitizedFileName = file.name
+      .replace(/[^a-zA-Z0-9._-]/g, "_")
+      .replace(/\.{2,}/g, ".") // Remove double dots
+      .slice(0, 100);          // Limita tamanho do nome
+
     // Create file path: patient-documents/{patientId}/{timestamp}_{filename}
     const timestamp = Date.now();
-    const filePath = `${patientId}/${timestamp}_${file.name}`;
+    const filePath = `${patientId}/${timestamp}_${sanitizedFileName}`;
 
     // Upload to Supabase Storage
     const { error: uploadError } = await supabase.storage

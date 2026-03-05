@@ -1,5 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { requireAdmin } from "@/lib/security/auth-helpers";
+import { checkRateLimit } from "@/lib/security/rate-limit";
 
 type FinancialRecordPayload = {
   record_type: "invoice" | "cashflow";
@@ -176,10 +177,8 @@ async function emitInvoiceToProvider(payload: {
   const emitPath =
     process.env.NFE_JP_EMIT_PATH ||
     (isNuvemFiscalProvider ? "/nfse" : "/nfse/emitir");
-  const clientId =
-    process.env.NFE_API_CLIENT_ID || "3O5Lrq7DFyQhSiB5HKEc";
-  const apiKey =
-    process.env.NFE_API_KEY || process.env["3O5Lrq7DFyQhSiB5HKEc"];
+  const clientId = process.env.NFE_API_CLIENT_ID || "";
+  const apiKey = process.env.NFE_API_KEY || "";
 
   if (!providerBaseUrl) {
     return {
@@ -265,38 +264,18 @@ async function emitInvoiceToProvider(payload: {
   }
 }
 
-async function isAdmin(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string
-): Promise<boolean> {
-  const { data } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", userId)
-    .single();
+export async function GET(request: Request) {
+  const ip = (request.headers as Headers).get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const rl = checkRateLimit(`financial:${ip}`, 30, 60);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: "Muitas requisições." }, { status: 429, headers: { "Retry-After": String(rl.resetIn) } });
+  }
 
-  return data?.role === "admin";
-}
-
-export async function GET() {
   try {
-    const supabase = await createClient();
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const admin = await isAdmin(supabase, user.id);
-    if (!admin) {
-      return NextResponse.json(
-        { error: "Forbidden: Admin only" },
-        { status: 403 }
-      );
-    }
+    const { supabase } = auth;
 
     const { data, error } = await supabase
       .from("financial_records")
@@ -330,24 +309,17 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const ip = (request.headers as Headers).get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const rl = checkRateLimit(`financial-post:${ip}`, 10, 60);
+  if (!rl.allowed) {
+    return NextResponse.json({ error: "Muitas requisições." }, { status: 429, headers: { "Retry-After": String(rl.resetIn) } });
+  }
+
   try {
-    const supabase = await createClient();
+    const auth = await requireAdmin();
+    if (!auth.ok) return auth.response;
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const admin = await isAdmin(supabase, user.id);
-    if (!admin) {
-      return NextResponse.json(
-        { error: "Forbidden: Admin only" },
-        { status: 403 }
-      );
-    }
+    const { supabase, userId } = auth;
 
     const body = (await request.json()) as FinancialRecordPayload;
 
@@ -402,7 +374,7 @@ export async function POST(request: Request) {
     const { data, error } = await supabase
       .from("financial_records")
       .insert({
-        created_by: user.id,
+        created_by: userId,
         record_type: body.record_type,
         transaction_type: body.transaction_type || null,
         category: body.category || null,

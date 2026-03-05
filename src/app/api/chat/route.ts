@@ -1,7 +1,7 @@
 import { createOpenAI } from "@ai-sdk/openai";
 import { generateText } from "ai";
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
+import { NextRequest } from "next/server";
+import { checkRateLimit } from "@/lib/security/rate-limit";
 
 export const runtime = "nodejs";
 
@@ -86,37 +86,13 @@ const DEFAULT_META: AgentMeta = {
   handoff: false,
 };
 
+/**
+ * SEGURANÇA: Nunca leia arquivos do filesystem em runtime para obter segredos.
+ * Use apenas variáveis de ambiente (process.env) — definidas no .env.local
+ * ou nas variáveis de ambiente do servidor de produção.
+ */
 function readOpenAiKey(): string | null {
-  if (process.env.OPENAI_API_KEY) {
-    return process.env.OPENAI_API_KEY;
-  }
-
-  try {
-    const candidateDirs = [
-      process.cwd(),
-      process.env.PWD,
-      process.env.INIT_CWD,
-      join(process.cwd(), "Desktop", "Projetos", "DT"),
-    ].filter((item): item is string => Boolean(item));
-
-    for (const baseDir of candidateDirs) {
-      const envPath = join(baseDir, ".env.local");
-      if (!existsSync(envPath)) continue;
-
-      const envContent = readFileSync(envPath, "utf8");
-      const line = envContent
-        .split("\n")
-        .find((item) => item.trim().startsWith("OPENAI_API_KEY="));
-
-      if (!line) continue;
-      const value = line.split("=").slice(1).join("=").trim();
-      if (value) return value;
-    }
-
-    return null;
-  } catch {
-    return null;
-  }
+  return process.env.OPENAI_API_KEY || null;
 }
 
 function toText(value: unknown): string {
@@ -291,7 +267,27 @@ function localClaudiaReply(
   };
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  // ── Rate limiting: máximo 20 requisições por minuto por IP ────────────────
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+    req.headers.get("x-real-ip") ||
+    "unknown";
+
+  const rateResult = checkRateLimit(`chat:${ip}`, 20, 60);
+  if (!rateResult.allowed) {
+    return Response.json(
+      { error: `Muitas requisições. Tente novamente em ${rateResult.resetIn}s.` },
+      {
+        status: 429,
+        headers: {
+          "Retry-After": String(rateResult.resetIn),
+          "X-RateLimit-Remaining": "0",
+        },
+      }
+    );
+  }
+
   try {
     const { messages, systemContext } = (await req.json()) as {
       messages: ChatMessage[];
