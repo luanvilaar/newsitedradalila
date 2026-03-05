@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { MessageCircle, Send, Phone } from "lucide-react";
+import { MessageCircle, Send, Phone, Wifi, WifiOff, RefreshCw } from "lucide-react";
 
 type Conversation = {
   wa_phone: string;
@@ -22,6 +22,15 @@ type ChatMessage = {
   created_at: string;
 };
 
+type InstanceStatus = {
+  connected: boolean;
+  jid?: string | null;
+  events?: string | null;
+  error?: string;
+};
+
+const POLL_INTERVAL = 5000; // 5 seconds
+
 export default function AdminWhatsAppPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedPhone, setSelectedPhone] = useState<string | null>(null);
@@ -30,13 +39,17 @@ export default function AdminWhatsAppPage() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
+  const [sendStatus, setSendStatus] = useState<{ ok: boolean; text: string } | null>(null);
+  const [instanceStatus, setInstanceStatus] = useState<InstanceStatus | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const selectedConversation = useMemo(
     () => conversations.find((c) => c.wa_phone === selectedPhone) || null,
     [conversations, selectedPhone]
   );
 
-  async function loadConversations() {
+  const loadConversations = useCallback(async (silent = false) => {
+    if (!silent) setLoadingConversations(true);
     try {
       const res = await fetch("/api/admin/whatsapp");
       if (!res.ok) throw new Error("Falha ao buscar conversas");
@@ -51,12 +64,12 @@ export default function AdminWhatsAppPage() {
     } catch (error) {
       console.error(error);
     } finally {
-      setLoadingConversations(false);
+      if (!silent) setLoadingConversations(false);
     }
-  }
+  }, [selectedPhone]);
 
-  async function loadMessages(phone: string) {
-    setLoadingMessages(true);
+  const loadMessages = useCallback(async (phone: string, silent = false) => {
+    if (!silent) setLoadingMessages(true);
     try {
       const res = await fetch(`/api/admin/whatsapp/${encodeURIComponent(phone)}`);
       if (!res.ok) throw new Error("Falha ao buscar mensagens");
@@ -65,9 +78,20 @@ export default function AdminWhatsAppPage() {
       setMessages(data.messages || []);
     } catch (error) {
       console.error(error);
-      setMessages([]);
+      if (!silent) setMessages([]);
     } finally {
-      setLoadingMessages(false);
+      if (!silent) setLoadingMessages(false);
+    }
+  }, []);
+
+  async function loadInstanceStatus() {
+    try {
+      const res = await fetch("/api/admin/whatsapp/status");
+      if (!res.ok) throw new Error("Status fetch failed");
+      const data = (await res.json()) as InstanceStatus;
+      setInstanceStatus(data);
+    } catch {
+      setInstanceStatus({ connected: false, error: "Falha ao verificar status" });
     }
   }
 
@@ -75,6 +99,7 @@ export default function AdminWhatsAppPage() {
     if (!selectedPhone || !draft.trim() || sending) return;
 
     setSending(true);
+    setSendStatus(null);
     try {
       const res = await fetch("/api/admin/whatsapp", {
         method: "POST",
@@ -82,20 +107,56 @@ export default function AdminWhatsAppPage() {
         body: JSON.stringify({ wa_phone: selectedPhone, content: draft.trim() }),
       });
 
+      const result = (await res.json()) as {
+        success?: boolean;
+        provider?: { ok?: boolean; status?: number; error?: string };
+      };
+
       if (!res.ok) throw new Error("Falha ao enviar mensagem");
 
       setDraft("");
-      await Promise.all([loadConversations(), loadMessages(selectedPhone)]);
+
+      if (result.provider?.ok) {
+        setSendStatus({ ok: true, text: "Enviada via WhatsApp" });
+      } else {
+        setSendStatus({
+          ok: false,
+          text: `Salva localmente (Avisa: ${result.provider?.error || "erro"})`,
+        });
+      }
+
+      await Promise.all([loadConversations(true), loadMessages(selectedPhone, true)]);
     } catch (error) {
       console.error(error);
+      setSendStatus({ ok: false, text: "Erro ao enviar" });
     } finally {
       setSending(false);
+      setTimeout(() => setSendStatus(null), 4000);
     }
   }
 
+  // Scroll down on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Initial load
   useEffect(() => {
     loadConversations();
-  }, []);
+    loadInstanceStatus();
+  }, [loadConversations]);
+
+  // Polling for new messages
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadConversations(true);
+      if (selectedPhone) {
+        loadMessages(selectedPhone, true);
+      }
+    }, POLL_INTERVAL);
+
+    return () => clearInterval(interval);
+  }, [selectedPhone, loadConversations, loadMessages]);
 
   useEffect(() => {
     if (!selectedPhone) return;
@@ -104,13 +165,49 @@ export default function AdminWhatsAppPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="font-heading text-3xl tracking-wide text-accent-dark">
-          WHATSAPP WEB
-        </h1>
-        <p className="text-text-secondary text-sm mt-1">
-          Central de conversas da recepção com pacientes.
-        </p>
+      <div className="mb-8 flex items-start justify-between">
+        <div>
+          <h1 className="font-heading text-3xl tracking-wide text-accent-dark">
+            WHATSAPP WEB
+          </h1>
+          <p className="text-text-secondary text-sm mt-1">
+            Central de conversas da recepção com pacientes.
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={loadInstanceStatus}
+            className="text-text-muted hover:text-text-primary transition-colors"
+            title="Atualizar status"
+          >
+            <RefreshCw size={14} />
+          </button>
+          {instanceStatus ? (
+            <div
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
+                instanceStatus.connected
+                  ? "bg-green-50 text-green-700 border border-green-200"
+                  : "bg-red-50 text-red-700 border border-red-200"
+              }`}
+            >
+              {instanceStatus.connected ? (
+                <Wifi size={12} />
+              ) : (
+                <WifiOff size={12} />
+              )}
+              {instanceStatus.connected ? "Conectado" : "Desconectado"}
+              {instanceStatus.jid && (
+                <span className="text-[10px] opacity-70">
+                  ({instanceStatus.jid.split("@")[0]})
+                </span>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs bg-gray-50 border border-gray-200 text-gray-500">
+              Verificando...
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6 h-[calc(100vh-220px)]">
@@ -216,7 +313,20 @@ export default function AdminWhatsAppPage() {
                 </div>
               ))
             )}
+            <div ref={messagesEndRef} />
           </div>
+
+          {sendStatus && (
+            <div
+              className={`px-4 py-1.5 text-xs border-t ${
+                sendStatus.ok
+                  ? "bg-green-50 text-green-700 border-green-200"
+                  : "bg-amber-50 text-amber-700 border-amber-200"
+              }`}
+            >
+              {sendStatus.text}
+            </div>
+          )}
 
           <div className="p-3 border-t border-border-light bg-white flex gap-2">
             <input

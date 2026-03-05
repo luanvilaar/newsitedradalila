@@ -24,7 +24,7 @@ function normalizePhone(phone: string): string {
 export function getAvisaConfig() {
   return {
     baseUrl: getEnv("AVISA_API_BASE_URL") || DEFAULT_AVISA_BASE_URL,
-    sendPath: getEnv("AVISA_API_SEND_PATH") || "/send",
+    sendPath: getEnv("AVISA_API_SEND_PATH") || "/actions/sendMessage",
     token: getEnv("AVISA_API_TOKEN"),
     instanceId: getEnv("AVISA_API_INSTANCE_ID"),
   };
@@ -46,25 +46,15 @@ export async function sendMessageViaAvisa(
   const endpoint = `${config.baseUrl.replace(/\/$/, "")}/${config.sendPath.replace(/^\//, "")}`;
 
   const payload: Record<string, unknown> = {
-    phone: normalizePhone(input.phone),
     number: normalizePhone(input.phone),
-    to: normalizePhone(input.phone),
     message: input.text,
-    text: input.text,
   };
-
-  if (config.instanceId) {
-    payload.instanceId = config.instanceId;
-    payload.instance_id = config.instanceId;
-    payload.instance = config.instanceId;
-  }
 
   const response = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${config.token}`,
-      "x-api-key": config.token,
     },
     body: JSON.stringify(payload),
   });

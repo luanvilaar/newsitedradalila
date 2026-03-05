@@ -1,71 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { extractInboundMessage } from "@/lib/whatsapp/avisa";
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
 
 export const runtime = "nodejs";
 
-function isAuthorized(req: NextRequest): boolean {
-  let secret = process.env.AVISA_WEBHOOK_SECRET;
-
-  if (!secret) {
-    try {
-      const candidateDirs = [
-        process.cwd(),
-        process.env.PWD,
-        process.env.INIT_CWD,
-        process.env.HOME
-          ? join(process.env.HOME, "Desktop", "Projetos", "DT")
-          : undefined,
-      ].filter((item): item is string => Boolean(item));
-
-      for (const baseDir of candidateDirs) {
-        const envPath = join(baseDir, ".env.local");
-        if (!existsSync(envPath)) continue;
-
-        const envContent = readFileSync(envPath, "utf8");
-        const line = envContent
-          .split("\n")
-          .find((item) => item.trim().startsWith("AVISA_WEBHOOK_SECRET="));
-
-        if (!line) continue;
-        const value = line.split("=").slice(1).join("=").trim();
-        if (value) {
-          secret = value;
-          break;
-        }
-      }
-    } catch {
-      secret = undefined;
-    }
-  }
-
-  if (!secret) return true;
-
-  const provided =
-    req.headers.get("x-webhook-secret") ||
-    req.headers.get("x-api-key") ||
-    req.nextUrl.searchParams.get("secret");
-
-  return provided === secret;
-}
-
 export async function POST(req: NextRequest) {
   try {
-    if (!isAuthorized(req)) {
-      return NextResponse.json({ error: "Unauthorized webhook" }, { status: 401 });
-    }
-
     const payload = (await req.json()) as unknown;
+    console.log("[avisa-webhook] payload received:", JSON.stringify(payload));
+
     const message = extractInboundMessage(payload);
 
     if (!message) {
+      console.log("[avisa-webhook] Unable to parse payload");
       return NextResponse.json(
         { error: "Unable to parse inbound message payload" },
         { status: 400 }
       );
     }
+
+    console.log("[avisa-webhook] parsed message:", JSON.stringify(message));
 
     const adminClient = createAdminClient();
 

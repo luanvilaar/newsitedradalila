@@ -10,6 +10,8 @@
     "fimdaclaudia": "bash scripts/fimdaclaudia.sh",
     "avisa:webhook:show": "node scripts/avisa-webhook.js show",
     "avisa:webhook:set": "node scripts/avisa-webhook.js set",
+    "avisa:status": "node scripts/avisa-tunnel.js status",
+    "avisa:send": "node scripts/avisa-tunnel.js send",
     "generate-images": "node scripts/generate-images.js --all",
     "generate-images:method": "node scripts/generate-images.js --method",
     "generate-images:specialty": "node scripts/generate-images.js --specialty"

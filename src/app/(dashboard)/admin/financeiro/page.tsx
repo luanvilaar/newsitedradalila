@@ -33,6 +33,21 @@ type InvoiceSubmitResponse = {
   integration?: InvoiceIntegration | null;
 };
 
+type StockMovement = {
+  id: string;
+  movement_type: "entry" | "exit";
+  medication_name: string;
+  quantity: number;
+  unit: string;
+  supplier_name: string;
+  supplier_document: string;
+  supplier_contact: string;
+  batch_code: string;
+  expiry_date: string;
+  occurred_at: string;
+  notes: string;
+};
+
 const today = new Date().toISOString().split("T")[0];
 
 export default function FinanceiroPage() {
@@ -63,6 +78,23 @@ export default function FinanceiroPage() {
     amount: "",
     description: "",
     occurred_at: today,
+  });
+
+  const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
+  const [stockLoading, setStockLoading] = useState(true);
+  const [stockError, setStockError] = useState<string | null>(null);
+  const [stockForm, setStockForm] = useState({
+    movement_type: "entry" as "entry" | "exit",
+    medication_name: "",
+    quantity: "",
+    unit: "un",
+    supplier_name: "",
+    supplier_document: "",
+    supplier_contact: "",
+    batch_code: "",
+    expiry_date: "",
+    occurred_at: today,
+    notes: "",
   });
 
   function extractProtocol(providerResponse?: Record<string, unknown> | null) {
@@ -136,6 +168,7 @@ export default function FinanceiroPage() {
 
   useEffect(() => {
     fetchRecords();
+    fetchStockMovements();
   }, []);
 
   const summary = useMemo(() => {
@@ -269,6 +302,78 @@ export default function FinanceiroPage() {
     });
 
     fetchRecords();
+  }
+
+  async function fetchStockMovements() {
+    try {
+      setStockLoading(true);
+      setStockError(null);
+      const res = await fetch("/api/admin/stock-movements");
+      if (!res.ok) throw new Error("Erro ao carregar estoque");
+      const data = await res.json();
+      setStockMovements(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setStockError(err instanceof Error ? err.message : "Erro ao carregar estoque");
+    } finally {
+      setStockLoading(false);
+    }
+  }
+
+  async function submitStockMovement() {
+    setSuccess(null);
+    setError(null);
+
+    const quantity = Number(stockForm.quantity);
+    if (!stockForm.medication_name || !quantity || quantity <= 0) {
+      setError("Informe o medicamento e a quantidade para registrar o estoque.");
+      return;
+    }
+
+    if (!stockForm.supplier_name) {
+      setError("Informe a empresa fornecedora da medicação.");
+      return;
+    }
+
+    const res = await fetch("/api/admin/stock-movements", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        movement_type: stockForm.movement_type,
+        medication_name: stockForm.medication_name,
+        quantity,
+        unit: stockForm.unit,
+        supplier_name: stockForm.supplier_name,
+        supplier_document: stockForm.supplier_document,
+        supplier_contact: stockForm.supplier_contact,
+        batch_code: stockForm.batch_code,
+        expiry_date: stockForm.expiry_date || null,
+        occurred_at: new Date(`${stockForm.occurred_at}T12:00:00`).toISOString(),
+        notes: stockForm.notes,
+      }),
+    });
+
+    if (!res.ok) {
+      const data = await res.json();
+      setError(data.error || "Erro ao salvar movimentação de estoque");
+      return;
+    }
+
+    setStockForm({
+      movement_type: "entry",
+      medication_name: "",
+      quantity: "",
+      unit: "un",
+      supplier_name: "",
+      supplier_document: "",
+      supplier_contact: "",
+      batch_code: "",
+      expiry_date: "",
+      occurred_at: today,
+      notes: "",
+    });
+
+    setSuccess("Movimentação registrada com sucesso.");
+    fetchStockMovements();
   }
 
   return (
@@ -513,6 +618,208 @@ export default function FinanceiroPage() {
                   </div>
                 </div>
               </Card>
+            ),
+          },
+          {
+            id: "estoque",
+            label: "Estoque",
+            content: (
+              <div className="space-y-6">
+                <Card>
+                  <h2 className="font-medium text-text-primary mb-4">Estoque de Medicações</h2>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-sm font-medium text-text-secondary" htmlFor="stock_type">
+                          Tipo
+                        </label>
+                        <select
+                          id="stock_type"
+                          className="w-full px-4 py-3 bg-white border border-border rounded-[var(--radius-md)] text-text-primary"
+                          value={stockForm.movement_type}
+                          onChange={(e) =>
+                            setStockForm((p) => ({
+                              ...p,
+                              movement_type: e.target.value as "entry" | "exit",
+                            }))
+                          }
+                        >
+                          <option value="entry">Entrada</option>
+                          <option value="exit">Saída</option>
+                        </select>
+                      </div>
+
+                      <Input
+                        id="stock_medication"
+                        label="Medicação *"
+                        placeholder="Ex: Semaglutida"
+                        value={stockForm.medication_name}
+                        onChange={(e) =>
+                          setStockForm((p) => ({ ...p, medication_name: e.target.value }))
+                        }
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Input
+                        id="stock_quantity"
+                        type="number"
+                        min="0"
+                        step="1"
+                        label="Quantidade *"
+                        value={stockForm.quantity}
+                        onChange={(e) => setStockForm((p) => ({ ...p, quantity: e.target.value }))}
+                      />
+                      <Input
+                        id="stock_unit"
+                        label="Unidade"
+                        placeholder="un, cx, fr"
+                        value={stockForm.unit}
+                        onChange={(e) => setStockForm((p) => ({ ...p, unit: e.target.value }))}
+                      />
+                      <Input
+                        id="stock_date"
+                        type="date"
+                        label="Data"
+                        value={stockForm.occurred_at}
+                        onChange={(e) =>
+                          setStockForm((p) => ({ ...p, occurred_at: e.target.value }))
+                        }
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input
+                        id="stock_supplier"
+                        label="Empresa Fornecedora *"
+                        placeholder="Nome da empresa"
+                        value={stockForm.supplier_name}
+                        onChange={(e) =>
+                          setStockForm((p) => ({ ...p, supplier_name: e.target.value }))
+                        }
+                      />
+                      <Input
+                        id="stock_supplier_doc"
+                        label="CNPJ"
+                        placeholder="00.000.000/0000-00"
+                        value={stockForm.supplier_document}
+                        onChange={(e) =>
+                          setStockForm((p) => ({ ...p, supplier_document: e.target.value }))
+                        }
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input
+                        id="stock_supplier_contact"
+                        label="Contato"
+                        placeholder="Telefone ou email"
+                        value={stockForm.supplier_contact}
+                        onChange={(e) =>
+                          setStockForm((p) => ({ ...p, supplier_contact: e.target.value }))
+                        }
+                      />
+                      <Input
+                        id="stock_batch"
+                        label="Lote"
+                        placeholder="Código do lote"
+                        value={stockForm.batch_code}
+                        onChange={(e) =>
+                          setStockForm((p) => ({ ...p, batch_code: e.target.value }))
+                        }
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input
+                        id="stock_expiry"
+                        type="date"
+                        label="Validade"
+                        value={stockForm.expiry_date}
+                        onChange={(e) =>
+                          setStockForm((p) => ({ ...p, expiry_date: e.target.value }))
+                        }
+                      />
+                      <Input
+                        id="stock_notes"
+                        label="Observações"
+                        placeholder="Observações adicionais"
+                        value={stockForm.notes}
+                        onChange={(e) => setStockForm((p) => ({ ...p, notes: e.target.value }))}
+                      />
+                    </div>
+
+                    <div className="flex justify-end">
+                      <Button variant="premium" onClick={submitStockMovement}>
+                        Registrar Movimentação
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+
+                <Card>
+                    <h3 className="font-medium text-text-primary mb-4">Movimentações Recentes</h3>
+                  {stockLoading ? (
+                    <p className="text-sm text-text-muted">Carregando...</p>
+                  ) : stockError ? (
+                    <p className="text-sm text-error">{stockError}</p>
+                  ) : stockMovements.length === 0 ? (
+                    <p className="text-sm text-text-muted">Nenhuma movimentação registrada.</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b border-border-light">
+                            <th className="text-left text-xs font-medium text-text-muted uppercase tracking-wider px-2 py-3">
+                              Medicação
+                            </th>
+                            <th className="text-left text-xs font-medium text-text-muted uppercase tracking-wider px-2 py-3">
+                              Tipo
+                            </th>
+                            <th className="text-left text-xs font-medium text-text-muted uppercase tracking-wider px-2 py-3">
+                              Quantidade
+                            </th>
+                            <th className="text-left text-xs font-medium text-text-muted uppercase tracking-wider px-2 py-3">
+                              Fornecedor
+                            </th>
+                            <th className="text-left text-xs font-medium text-text-muted uppercase tracking-wider px-2 py-3">
+                              Data
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {stockMovements.map((movement) => (
+                            <tr key={movement.id} className="border-b border-border-light last:border-0">
+                              <td className="px-2 py-3 text-sm text-text-primary">
+                                {movement.medication_name}
+                              </td>
+                              <td className="px-2 py-3 text-sm text-text-secondary">
+                                {movement.movement_type === "entry" ? "Entrada" : "Saída"}
+                              </td>
+                              <td className="px-2 py-3 text-sm text-text-secondary">
+                                {movement.quantity} {movement.unit}
+                              </td>
+                              <td className="px-2 py-3 text-sm text-text-secondary">
+                                <div className="font-medium text-text-primary">
+                                  {movement.supplier_name}
+                                </div>
+                                {movement.supplier_document && (
+                                  <div className="text-xs text-text-muted">
+                                    {movement.supplier_document}
+                                  </div>
+                                )}
+                              </td>
+                              <td className="px-2 py-3 text-sm text-text-secondary">
+                                {new Date(movement.occurred_at).toLocaleDateString("pt-BR")}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </Card>
+              </div>
             ),
           },
         ]}

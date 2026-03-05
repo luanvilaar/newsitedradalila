@@ -211,3 +211,21 @@ export interface FinancialRecord {
   created_at: string;
   updated_at: string;
 }
+
+export interface StockMovement {
+  id: string;
+  created_by: string;
+  movement_type: TransactionType;
+  medication_name: string;
+  quantity: number;
+  unit: string;
+  supplier_name: string;
+  supplier_document: string | null;
+  supplier_contact: string | null;
+  batch_code: string | null;
+  expiry_date: string | null;
+  occurred_at: string;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
