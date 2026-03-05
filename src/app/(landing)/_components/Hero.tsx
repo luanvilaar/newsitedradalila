@@ -123,20 +123,19 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.76 }}
           >
-            <Button
-              variant="premium"
-              size="lg"
-              className="min-w-[196px]"
-              asChild
+            <Link
+              href="https://calendar.google.com/calendar/appointments/schedules/AcZssZ304GQnQvezrYe8wYoeIY3Z9jumbUKc7oHPExOJWnWI2pt3lNbq80np2s8J7fydjXTDGCpuRxo1?gv=true"
+              target="_blank"
+              rel="noreferrer"
             >
-              <Link
-                href="https://calendar.google.com/calendar/appointments/schedules/AcZssZ304GQnQvezrYe8wYoeIY3Z9jumbUKc7oHPExOJWnWI2pt3lNbq80np2s8J7fydjXTDGCpuRxo1?gv=true"
-                target="_blank"
-                rel="noreferrer"
+              <Button
+                variant="premium"
+                size="lg"
+                className="min-w-[196px]"
               >
                 Agendar Consulta
-              </Link>
-            </Button>
+              </Button>
+            </Link>
             <Link href="/login" className="group">
               <Button
                 variant="outline"

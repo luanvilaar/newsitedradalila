@@ -17,14 +17,16 @@ export default function AgendarPage() {
               Escolha o melhor horário para você. Caso precise de ajuda, entre em contato pelo WhatsApp.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Button asChild variant="outline" size="sm" className="border-accent-dark/20 text-accent-dark">
-                <Link href="/">Voltar para a página inicial</Link>
-              </Button>
-              <Button asChild variant="premium" size="sm">
-                <Link href="https://wa.me/5581999999999" target="_blank" rel="noreferrer">
+              <Link href="/">
+                <Button variant="outline" size="sm" className="border-accent-dark/20 text-accent-dark">
+                  Voltar para a página inicial
+                </Button>
+              </Link>
+              <Link href="https://wa.me/5581999999999" target="_blank" rel="noreferrer">
+                <Button variant="premium" size="sm">
                   Falar no WhatsApp
-                </Link>
-              </Button>
+                </Button>
+              </Link>
             </div>
           </div>
 

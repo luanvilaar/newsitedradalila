@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 
 export function PremiumCTA() {
@@ -77,15 +78,15 @@ export function PremiumCTA() {
             transition={{ duration: 0.2 }}
             className="group relative"
           >
-            <Button asChild variant="premium" size="lg" className="min-w-[260px] text-lg relative z-10">
-              <Link
-                href="https://calendar.google.com/calendar/appointments/schedules/AcZssZ304GQnQvezrYe8wYoeIY3Z9jumbUKc7oHPExOJWnWI2pt3lNbq80np2s8J7fydjXTDGCpuRxo1?gv=true"
-                target="_blank"
-                rel="noreferrer"
-              >
+            <Link
+              href="https://calendar.google.com/calendar/appointments/schedules/AcZssZ304GQnQvezrYe8wYoeIY3Z9jumbUKc7oHPExOJWnWI2pt3lNbq80np2s8J7fydjXTDGCpuRxo1?gv=true"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <Button variant="premium" size="lg" className="min-w-[260px] text-lg relative z-10">
                 Agendar Consulta
-              </Link>
-            </Button>
+              </Button>
+            </Link>
           </motion.div>
         </motion.div>
       </div>

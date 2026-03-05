@@ -109,7 +109,7 @@ export default function FinanceiroPage() {
         body: JSON.stringify({ password: deletePassword }),
       });
       if (!res.ok) {
-        const _data = await res.json();
+        const data = await res.json();
         setDeleteError(data.error || "Erro ao excluir registro.");
         return;
       }
@@ -125,7 +125,7 @@ export default function FinanceiroPage() {
       setLoading(true);
       const res = await fetch("/api/admin/financial-records");
       if (!res.ok) throw new Error("Erro ao carregar financeiro");
-      const _data = await res.json();
+      const data = await res.json();
       setRecords(Array.isArray(data) ? data : []);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro ao carregar financeiro");
@@ -190,7 +190,7 @@ export default function FinanceiroPage() {
     });
 
     if (!res.ok) {
-      const _data = await res.json();
+      const data = await res.json();
       setError(data.error || "Erro ao salvar nota fiscal");
       return;
     }
@@ -255,7 +255,7 @@ export default function FinanceiroPage() {
     });
 
     if (!res.ok) {
-      const _data = await res.json();
+      const data = await res.json();
       setError(data.error || "Erro ao salvar fluxo de caixa");
       return;
     }

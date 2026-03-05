@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import pdfParse from "pdf-parse/legacy/index.js";
 import { PDFDocument } from "pdf-lib";
+
+// Type for pdf-parse
+type PdfParseResult = { text: string; numpages: number; info: Record<string, unknown> };
+type PdfParseFn = (buffer: Buffer) => Promise<PdfParseResult>;
+
+// Dynamic import to handle both ESM and CommonJS
+async function getPdfParse(): Promise<PdfParseFn> {
+  const mod = await import("pdf-parse") as unknown as { default?: PdfParseFn } & PdfParseFn;
+  return typeof mod.default === "function" ? mod.default : mod;
+}
 
 /**
  * POST: Extract bioimpedance data from PDF
@@ -261,6 +270,7 @@ export async function POST(
     let extractedText = "";
     try {
       // Use pdf-parse correctly to extract text from PDF
+      const pdfParse = await getPdfParse();
       const pdfData = await pdfParse(buffer);
 
       // Extract text from all pages

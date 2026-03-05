@@ -36,7 +36,7 @@ const meta = {
       description: "Custom CSS classes",
     },
     segments: {
-      control: { type: null },
+      control: false,
       description: "Segment trend data",
     },
     onSegmentClick: {

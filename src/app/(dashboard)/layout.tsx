@@ -8,6 +8,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { cn } from "@/lib/utils/cn";
+import { ChatWidget } from "@/components/shared/ChatWidget";
 
 export default function DashboardLayout({
   children,
@@ -83,6 +84,8 @@ export default function DashboardLayout({
         {/* Page content */}
         <main className="p-6 md:p-8">{children}</main>
       </div>
+
+      <ChatWidget />
     </div>
   );
 }

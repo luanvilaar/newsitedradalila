@@ -1,6 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    // Force project root so .env.local is picked up correctly
+    root: __dirname,
+  },
   images: {
     formats: ["image/webp", "image/avif"],
     dangerouslyAllowSVG: true,

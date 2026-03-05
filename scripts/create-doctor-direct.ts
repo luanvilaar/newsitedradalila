@@ -5,7 +5,7 @@ const password = "dali1010";
 const fullName = "Dra. Dalila Lucena";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const anonKey = process.env.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjdmphaXVmcmJxY2xjeHByb2VlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI0OTg2MDIsImV4cCI6MjA4ODA3NDYwMn0.ynvbm4Kav8uPRsEHIOBx7eqD-zQ926v6J01mt0ViHlUNEXT_PUBLIC_SUPABASE_ANON_KEY;
+const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !anonKey) {
   console.error("❌ Missing Supabase credentials");

@@ -142,7 +142,8 @@ export async function POST(request: Request) {
     let parserError: string | null = null;
 
     try {
-      const pdfParse = (await import("pdf-parse")).default;
+      const pdfParseModule = await import("pdf-parse") as unknown as { default?: (buffer: Buffer) => Promise<{ text: string }> } & ((buffer: Buffer) => Promise<{ text: string }>);
+      const pdfParse = typeof pdfParseModule.default === "function" ? pdfParseModule.default : pdfParseModule;
       const parsed = await pdfParse(Buffer.from(buffer));
       extractedText = parsed?.text || "";
     } catch (error) {

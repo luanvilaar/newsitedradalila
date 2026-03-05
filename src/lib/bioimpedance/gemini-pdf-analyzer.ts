@@ -270,7 +270,7 @@ export function isGeminiConfigured(): boolean {
 // ── Helpers ───────────────────────────────────────────────────────────
 
 function sanitizeResult(raw: AiAnalysisResult): AiAnalysisResult {
-  const _data = raw.extractedData || {} as AiAnalysisResult["extractedData"];
+  const data = raw.extractedData || {} as AiAnalysisResult["extractedData"];
 
   return {
     extractedData: {

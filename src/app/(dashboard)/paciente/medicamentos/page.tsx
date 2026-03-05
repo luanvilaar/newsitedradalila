@@ -11,7 +11,12 @@ interface Medication {
   dosage?: string;
   frequency?: string;
   status: string;
-  details?: unknown;
+  details?: {
+    name?: string;
+    dosage?: string;
+    frequency?: string;
+    instructions?: string;
+  };
 }
 
 export default function MedicamentosPage() {
@@ -29,7 +34,7 @@ export default function MedicamentosPage() {
 
         // Filter for medication prescriptions
         const meds = prescriptions.filter(
-          (p: unknown) => p.type === "medication"
+          (p: { type?: string }) => p.type === "medication"
         ) as Medication[];
 
         setMedications(meds);

@@ -26,7 +26,7 @@ export default function ServicosPage() {
         const res = await fetch("/api/patients/current/services");
         if (!res.ok) throw new Error("Failed to fetch services");
 
-        const _data = await res.json();
+        const data = await res.json();
         setServices(data);
       } catch (err) {
         console.error("Error fetching services:", err);

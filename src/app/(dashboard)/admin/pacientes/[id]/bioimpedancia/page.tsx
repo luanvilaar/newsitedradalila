@@ -50,7 +50,7 @@ export default function BioimpedanciaAdminPage() {
       try {
         const res = await fetch(`/api/patients/${patientId}/bioimpedance`);
         if (res.ok) {
-          const _data = await res.json();
+          const data = await res.json();
           if (data && data.length > 0) {
             setLatestRecordData(data[0]);
             setShowPreview(true);
@@ -77,7 +77,7 @@ export default function BioimpedanciaAdminPage() {
     };
 
     const muscleChange = previous
-      ? calculateChange(current.muscle_mass, previous.muscle_mass)
+      ? calculateChange(current.muscle_mass ?? undefined, previous.muscle_mass ?? undefined)
       : 0;
     const fatChange = previous
       ? calculateChange(current.body_fat_percentage ?? undefined, previous.body_fat_percentage ?? undefined)

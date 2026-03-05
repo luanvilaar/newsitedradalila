@@ -14,6 +14,7 @@ import {
   Users,
   FolderOpen,
   Circle,
+  MessageCircle,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -39,6 +40,7 @@ const iconMap: Record<string, LucideIcon> = {
   Dumbbell,
   Users,
   FolderOpen,
+  MessageCircle,
   Circle,
 };
 

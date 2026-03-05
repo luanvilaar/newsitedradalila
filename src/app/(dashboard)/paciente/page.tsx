@@ -46,7 +46,7 @@ export default function PatientDashboard() {
 
         const activeMeds = Array.isArray(prescriptions)
           ? prescriptions.filter(
-              (p: unknown) => p.type === "medication" && p.status === "active"
+              (p: { type?: string; status?: string }) => p.type === "medication" && p.status === "active"
             ).length
           : 0;
 

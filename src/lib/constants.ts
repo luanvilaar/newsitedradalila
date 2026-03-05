@@ -58,6 +58,7 @@ export const NAV_PATIENT = [
 export const NAV_ADMIN = [
   { href: "/admin", label: "Dashboard", icon: "LayoutDashboard" },
   { href: "/admin/pacientes", label: "Pacientes", icon: "Users" },
+  { href: "/admin/whatsapp", label: "WhatsApp", icon: "MessageCircle" },
   { href: "/admin/documentos", label: "Documentos", icon: "FolderOpen" },
   { href: "/admin/financeiro", label: "Financeiro", icon: "FileText" },
 ] as const;

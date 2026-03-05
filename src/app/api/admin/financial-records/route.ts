@@ -229,7 +229,7 @@ async function emitInvoiceToProvider(payload: {
       }
     );
 
-    const _data = await response
+    const data = await response
       .json()
       .catch(() => null as Record<string, unknown> | null);
 

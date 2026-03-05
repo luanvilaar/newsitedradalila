@@ -100,7 +100,7 @@ export default function AnamnesePage() {
       });
 
       if (!res.ok) {
-        const _data = await res.json();
+        const data = await res.json();
         throw new Error(data.error || "Erro ao salvar anamnese");
       }
 

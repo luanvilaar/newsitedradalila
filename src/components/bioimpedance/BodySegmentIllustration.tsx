@@ -866,4 +866,3 @@ function SegmentDetailCard({ segment }: { segment: SegmentTrendData }) {
 }
 
 export { BodySegmentIllustration };
-export type { BodySegmentIllustrationProps, SegmentTrendData };

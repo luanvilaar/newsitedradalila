@@ -38,7 +38,14 @@ const PatientOverviewCharts = dynamic(
 interface PatientData {
   id: string;
   status: string;
-  address?: unknown;
+  address?: {
+    street: string;
+    number: string;
+    complement?: string;
+    city: string;
+    state: string;
+    zip: string;
+  } | null;
   notes?: string;
   profiles?: {
     full_name: string;
@@ -91,7 +98,7 @@ function OverviewTab({
 
       setCounts({
         prescriptions: Array.isArray(presc)
-          ? presc.filter((p: unknown) => p.status === "active").length
+          ? presc.filter((p: { status?: string }) => p.status === "active").length
           : 0,
         bioimpedance: Array.isArray(bio) ? bio.length : 0,
         documents: Array.isArray(docs) ? docs.length : 0,
@@ -125,11 +132,9 @@ function OverviewTab({
           <div className="flex items-center gap-3 text-sm">
             <MapPin size={16} className="text-text-muted" />
             <span className="text-text-secondary">
-              {typeof patient.address === "string"
-                ? patient.address
-                : patient.address
-                  ? `${patient.address.street}, ${patient.address.number}${patient.address.complement ? `, ${patient.address.complement}` : ""} - ${patient.address.neighborhood}, ${patient.address.city}, ${patient.address.state}`
-                  : "—"}
+              {patient.address
+                ? `${patient.address.street}, ${patient.address.number}${patient.address.complement ? `, ${patient.address.complement}` : ""} - ${patient.address.city}, ${patient.address.state}`
+                : "—"}
             </span>
           </div>
           <div className="flex items-center gap-3 text-sm">
@@ -196,7 +201,7 @@ function AnamneseTab({ patientId }: { patientId: string }) {
       try {
         const res = await fetch(`/api/patients/${patientId}/anamnesis`);
         if (res.ok) {
-          const _data = await res.json();
+          const data = await res.json();
           setRecords(Array.isArray(data) ? data : []);
         }
       } catch (err) {
@@ -270,7 +275,7 @@ function BioimpedanciaTab({ patientId }: { patientId: string }) {
       try {
         const res = await fetch(`/api/patients/${patientId}/bioimpedance`);
         if (res.ok) {
-          const _data = await res.json();
+          const data = await res.json();
           setRecords(Array.isArray(data) ? data : []);
         }
       } catch (err) {
@@ -378,7 +383,7 @@ function PrescricoesTab({ patientId }: { patientId: string }) {
       try {
         const res = await fetch(`/api/patients/${patientId}/prescriptions`);
         if (res.ok) {
-          const _data = await res.json();
+          const data = await res.json();
           setRecords(Array.isArray(data) ? data : []);
         }
       } catch (err) {
@@ -511,43 +516,43 @@ function HistoricoTab({ patientId }: { patientId: string }) {
           fetch(`/api/patients/${patientId}/prescriptions`),
         ]);
 
-        const items: unknown[] = [];
+        const items: Array<{ id: string; type: string; title: string; description: string; date: string }> = [];
 
         if (anamRes.status === "fulfilled" && anamRes.value.ok) {
-          const _data = await anamRes.value.json();
-          (Array.isArray(data) ? data : []).forEach((r: unknown) => {
+          const data = await anamRes.value.json();
+          (Array.isArray(data) ? data : []).forEach((r: Record<string, unknown>) => {
             items.push({
-              id: r.id,
+              id: r.id as string,
               type: "anamnesis",
               title: "Anamnese registrada",
-              description: r.chief_complaint || "",
-              date: r.created_at,
+              description: (r.chief_complaint as string) || "",
+              date: r.created_at as string,
             });
           });
         }
 
         if (bioRes.status === "fulfilled" && bioRes.value.ok) {
-          const _data = await bioRes.value.json();
-          (Array.isArray(data) ? data : []).forEach((r: unknown) => {
+          const data = await bioRes.value.json();
+          (Array.isArray(data) ? data : []).forEach((r: Record<string, unknown>) => {
             items.push({
-              id: r.id,
+              id: r.id as string,
               type: "bioimpedance",
               title: `Bioimpedância - ${r.weight}kg`,
               description: `Gordura: ${r.body_fat_percentage || "—"}% | Músculo: ${r.muscle_mass || "—"}kg`,
-              date: r.created_at,
+              date: r.created_at as string,
             });
           });
         }
 
         if (prescRes.status === "fulfilled" && prescRes.value.ok) {
-          const _data = await prescRes.value.json();
-          (Array.isArray(data) ? data : []).forEach((r: unknown) => {
+          const data = await prescRes.value.json();
+          (Array.isArray(data) ? data : []).forEach((r: Record<string, unknown>) => {
             items.push({
-              id: r.id,
+              id: r.id as string,
               type: "prescription",
-              title: r.title,
+              title: r.title as string,
               description: `${r.type} - ${r.status}`,
-              date: r.created_at,
+              date: r.created_at as string,
             });
           });
         }
@@ -645,7 +650,7 @@ export default function PatientDetailPage() {
           throw new Error(message);
         }
 
-        const _data = await res.json();
+        const data = await res.json();
         setPatient(data);
       } catch (err) {
         console.error("Error fetching patient:", err);

@@ -7,12 +7,16 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "fimdaclaudia": "bash scripts/fimdaclaudia.sh",
+    "avisa:webhook:show": "node scripts/avisa-webhook.js show",
+    "avisa:webhook:set": "node scripts/avisa-webhook.js set",
     "generate-images": "node scripts/generate-images.js --all",
     "generate-images:method": "node scripts/generate-images.js --method",
     "generate-images:specialty": "node scripts/generate-images.js --specialty"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.39",
+    "@ai-sdk/react": "^3.0.114",
     "@google/genai": "^1.43.0",
     "@hookform/resolvers": "^5.2.2",
     "@supabase/ssr": "^0.9.0",
@@ -24,6 +28,7 @@
     "lucide-react": "^0.576.0",
     "next": "16.1.6",
     "openai": "^6.25.0",
+    "pdf-lib": "^1.17.1",
     "pdf-parse": "^2.4.5",
     "react": "19.2.3",
     "react-dom": "19.2.3",
@@ -33,6 +38,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@storybook/react": "^10.2.15",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
