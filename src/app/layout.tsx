@@ -22,6 +22,10 @@ export const metadata: Metadata = {
   title: "Dra. Dalila Lucena | Medicina de Performance e Longevidade",
   description:
     "Especialista em Obesidade, Performance, Reposição Hormonal e Implantes Hormonais. Atendimento em João Pessoa e Recife. CRM 15295.",
+  icons: {
+    icon: "/logo-accent.png",
+    apple: "/logo-accent.png",
+  },
   keywords: [
     "medicina",
     "performance",

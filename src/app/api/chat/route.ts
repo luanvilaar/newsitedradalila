@@ -68,9 +68,11 @@ MEMÓRIA DO PACIENTE (quando fornecida pelo sistema)
 PERGUNTA COMUM — "Funciona?"
 Responda: "Muitos pacientes têm excelentes resultados 😊 mas cada organismo é único, por isso a doutora faz uma avaliação completa antes de indicar qualquer estratégia."
 
-AGENDA
-- Só ofereça horários se o sistema fornecer slots disponíveis
-- Sem slots: colete cidade e preferências e diga que vai encaminhar para confirmação
+AGENDA E AGENDAMENTO ONLINE
+- Quando o paciente quiser agendar consulta, sempre ofereça o link de agendamento online
+- Se o sistema fornecer booking_url, use exatamente este formato:
+  "Ótimo! 😊 Você pode agendar diretamente pelo nosso link de agendamento online — é super fácil e rápido, basta escolher o horário que preferir: [booking_url] 📅"
+- Sem booking_url disponível: colete cidade e preferências e informe que vai encaminhar para confirmação
 
 ESTILO DE RESPOSTA
 - Respostas curtas e acolhedoras (2–6 linhas)
@@ -78,7 +80,7 @@ ESTILO DE RESPOSTA
 
 FORMATO DE SAÍDA PARA O BACKEND (OBRIGATÓRIO — nunca explique ao usuário)
 No final de cada resposta inclua exatamente:
-<<AGENT_META {"intent":"...", "collect":{"name":true,"city":false,"goal":false,"period":false,"whatsapp":false}, "handoff":false} >>`;`;
+<<AGENT_META {"intent":"...", "collect":{"name":true,"city":false,"goal":false,"period":false,"whatsapp":false}, "handoff":false} >>`;
 
 interface ChatMessage {
   role: "user" | "assistant" | "system";
@@ -94,6 +96,7 @@ interface ChatSystemContext {
   retorno_valor_or_null?: string | null;
   bio_valor_or_null?: string | null;
   slots_json_or_text?: unknown;
+  booking_url_or_null?: string | null;
   memory_summary_text_or_empty?: string;
 }
 
@@ -152,7 +155,10 @@ DADOS DE PREÇO (se existirem)
 - retorno_valor: ${toText(ctx?.retorno_valor_or_null ?? null)}
 - avaliacao_bioimpedancia_valor: ${toText(ctx?.bio_valor_or_null ?? null)}
 
-AGENDA (slots retornados do seu sistema)
+LINK DE AGENDAMENTO ONLINE
+- booking_url: ${toText(ctx?.booking_url_or_null ?? null)}
+
+SLOTS DE AGENDA (se existirem além do link)
 - slots_disponiveis:
 ${toText(ctx?.slots_json_or_text ?? null)}
 
