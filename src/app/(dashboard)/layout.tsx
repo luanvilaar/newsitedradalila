@@ -49,6 +49,7 @@ export default function DashboardLayout({
           items={navItems}
           title="DALILA LUCENA"
           className="z-40"
+          onNavClick={() => setSidebarOpen(false)}
         />
 
         {/* Logout button inside sidebar */}

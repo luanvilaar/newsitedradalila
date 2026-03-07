@@ -30,7 +30,7 @@ export function Authority() {
 
           {/* Col 1: Main portrait — tall, face at top */}
           <motion.div
-            className="relative rounded-[var(--radius-2xl)] overflow-hidden group shadow-[0_16px_48px_rgba(184,156,100,0.14)] border border-accent-gold/25"
+            className="relative min-h-[400px] lg:min-h-0 rounded-[var(--radius-2xl)] overflow-hidden group shadow-[0_16px_48px_rgba(184,156,100,0.14)] border border-accent-gold/25"
             initial={{ opacity: 0, x: -50 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true, margin: "-80px" }}

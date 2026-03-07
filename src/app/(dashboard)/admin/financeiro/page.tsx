@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Tabs } from "@/components/ui/Tabs";
-import { Trash2 } from "lucide-react";
+import { Trash2, Upload, FileText, CheckCircle, X, AlertTriangle, Package, ShoppingCart } from "lucide-react";
 
 type FinancialRecord = {
   id: string;
@@ -46,6 +46,29 @@ type StockMovement = {
   expiry_date: string;
   occurred_at: string;
   notes: string;
+};
+
+type ParsedMedication = {
+  medication_name: string;
+  quantity: number;
+  unit: string;
+  unit_price: number;
+  product_code: string;
+  supplier_name: string;
+  supplier_document: string;
+  supplier_contact: string;
+  occurred_at: string;
+  notes: string;
+};
+
+type StockItem = {
+  medication_name: string;
+  unit: string;
+  current_stock: number;
+  total_entries: number;
+  total_exits: number;
+  last_entry_at: string | null;
+  last_exit_at: string | null;
 };
 
 const today = new Date().toISOString().split("T")[0];
@@ -96,6 +119,148 @@ export default function FinanceiroPage() {
     occurred_at: today,
     notes: "",
   });
+
+  const [pdfParsing, setPdfParsing] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
+  const [parsedMedications, setParsedMedications] = useState<ParsedMedication[]>([]);
+  const [pdfOrderNumber, setPdfOrderNumber] = useState<string>("");
+  const [batchSubmitting, setBatchSubmitting] = useState(false);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+
+  // Inventory state
+  const [inventory, setInventory] = useState<StockItem[]>([]);
+  const [inventoryLoading, setInventoryLoading] = useState(false);
+  const [inventoryError, setInventoryError] = useState<string | null>(null);
+  const [saleForm, setSaleForm] = useState({
+    patient_name: "",
+    medication_name: "",
+    quantity: "",
+    occurred_at: today,
+    notes: "",
+  });
+  const [saleSubmitting, setSaleSubmitting] = useState(false);
+
+  async function fetchInventory() {
+    setInventoryLoading(true);
+    setInventoryError(null);
+    try {
+      const res = await fetch("/api/admin/stock-inventory");
+      const data = await res.json();
+      if (!res.ok) { setInventoryError(data.error || "Erro ao carregar inventário"); return; }
+      setInventory(Array.isArray(data) ? data : []);
+    } catch {
+      setInventoryError("Erro ao carregar inventário.");
+    } finally {
+      setInventoryLoading(false);
+    }
+  }
+
+  async function submitSale() {
+    setSuccess(null);
+    setError(null);
+    const qty = Number(saleForm.quantity);
+    if (!saleForm.patient_name || !saleForm.medication_name || !qty || qty <= 0) {
+      setError("Paciente, medicação e quantidade são obrigatórios.");
+      return;
+    }
+    const item = inventory.find((i) => i.medication_name === saleForm.medication_name);
+    if (item && item.current_stock < qty) {
+      setError(`Estoque insuficiente. Disponível: ${item.current_stock} ${item.unit}.`);
+      return;
+    }
+    setSaleSubmitting(true);
+    const res = await fetch("/api/admin/stock-movements", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        movement_type: "exit",
+        medication_name: saleForm.medication_name,
+        quantity: qty,
+        unit: item?.unit || "un",
+        supplier_name: `Paciente: ${saleForm.patient_name}`,
+        occurred_at: new Date(`${saleForm.occurred_at}T12:00:00`).toISOString(),
+        notes: saleForm.notes || `Venda para ${saleForm.patient_name}`,
+      }),
+    });
+    setSaleSubmitting(false);
+    if (!res.ok) {
+      const data = await res.json();
+      setError(data.error || "Erro ao registrar venda.");
+      return;
+    }
+    setSuccess(`Saída registrada: ${qty} ${item?.unit || "un"} de ${saleForm.medication_name} para ${saleForm.patient_name}.`);
+    setSaleForm({ patient_name: "", medication_name: "", quantity: "", occurred_at: today, notes: "" });
+    fetchInventory();
+    fetchStockMovements();
+  }
+
+  async function handlePdfUpload(file: File) {
+    setPdfParsing(true);
+    setPdfError(null);
+    setParsedMedications([]);
+
+    const formData = new FormData();
+    formData.append("pdf", file);
+
+    try {
+      const res = await fetch("/api/admin/stock-movements/parse-pdf", {
+        method: "POST",
+        body: formData,
+      });
+      let data: Record<string, unknown>;
+      try {
+        data = await res.json();
+      } catch {
+        setPdfError(`Erro interno do servidor (${res.status}). Verifique os logs.`);
+        return;
+      }
+      if (!res.ok) {
+        setPdfError((data.error as string) || "Erro ao processar PDF.");
+        return;
+      }
+      setParsedMedications((data.medications as ParsedMedication[]) ?? []);
+      setPdfOrderNumber((data.order_number as string) ?? "");
+    } catch (err) {
+      setPdfError(err instanceof Error ? err.message : "Erro de conexão ao processar PDF.");
+    } finally {
+      setPdfParsing(false);
+    }
+  }
+
+  async function confirmBatchEntry() {
+    if (parsedMedications.length === 0) return;
+    setBatchSubmitting(true);
+    setSuccess(null);
+    setError(null);
+
+    let successCount = 0;
+    for (const med of parsedMedications) {
+      const res = await fetch("/api/admin/stock-movements", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          movement_type: "entry",
+          medication_name: med.medication_name,
+          quantity: med.quantity,
+          unit: med.unit,
+          batch_code: med.product_code || undefined,
+          supplier_name: med.supplier_name,
+          supplier_document: med.supplier_document,
+          supplier_contact: med.supplier_contact,
+          occurred_at: new Date(`${med.occurred_at}T12:00:00`).toISOString(),
+          notes: med.notes,
+        }),
+      });
+      if (res.ok) successCount++;
+    }
+
+    setBatchSubmitting(false);
+    setParsedMedications([]);
+    setPdfOrderNumber("");
+    if (pdfInputRef.current) pdfInputRef.current.value = "";
+    setSuccess(`${successCount} medicação(ões) registradas com sucesso no estoque.`);
+    fetchStockMovements();
+  }
 
   function extractProtocol(providerResponse?: Record<string, unknown> | null) {
     if (!providerResponse) return null;
@@ -169,6 +334,7 @@ export default function FinanceiroPage() {
   useEffect(() => {
     fetchRecords();
     fetchStockMovements();
+    fetchInventory();
   }, []);
 
   const summary = useMemo(() => {
@@ -625,6 +791,153 @@ export default function FinanceiroPage() {
             label: "Estoque",
             content: (
               <div className="space-y-6">
+                {/* PDF Import Section */}
+                <Card>
+                  <h2 className="font-medium text-text-primary mb-1">Importar Orçamento PDF</h2>
+                  <p className="text-xs text-text-muted mb-4">
+                    Faça upload do PDF do fornecedor para dar entrada automática das medicações.
+                  </p>
+
+                  <div className="flex items-center gap-3">
+                    <label
+                      htmlFor="pdf-upload"
+                      className="flex items-center gap-2 cursor-pointer px-4 py-2.5 rounded-[var(--radius-md)] border border-dashed border-border hover:border-accent-gold/60 hover:bg-accent-gold/5 transition-colors text-sm text-text-secondary"
+                    >
+                      <Upload size={16} />
+                      Selecionar PDF
+                    </label>
+                    <input
+                      ref={pdfInputRef}
+                      id="pdf-upload"
+                      type="file"
+                      accept="application/pdf"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handlePdfUpload(file);
+                      }}
+                    />
+                    {pdfParsing && (
+                      <span className="text-sm text-text-muted animate-pulse">Processando PDF...</span>
+                    )}
+                  </div>
+
+                  {pdfError && (
+                    <p className="text-sm text-error mt-3">{pdfError}</p>
+                  )}
+
+                  {parsedMedications.length > 0 && (
+                    <div className="mt-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <FileText size={15} className="text-accent-dark" />
+                        <span className="text-sm font-medium text-text-primary">
+                          {pdfOrderNumber ? `Orçamento Nº ${pdfOrderNumber} — ` : ""}
+                          {parsedMedications.length} medicação(ões) identificada(s)
+                        </span>
+                      </div>
+
+                      <div className="overflow-x-auto rounded-[var(--radius-md)] border border-border">
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="bg-neutral-50 border-b border-border">
+                              <th className="text-left text-xs font-medium text-text-muted uppercase tracking-wider px-3 py-2 hidden md:table-cell">
+                                Código
+                              </th>
+                              <th className="text-left text-xs font-medium text-text-muted uppercase tracking-wider px-3 py-2">
+                                Descrição
+                              </th>
+                              <th className="text-left text-xs font-medium text-text-muted uppercase tracking-wider px-3 py-2">
+                                Qtd
+                              </th>
+                              <th className="text-left text-xs font-medium text-text-muted uppercase tracking-wider px-3 py-2">
+                                Un
+                              </th>
+                              <th className="text-right text-xs font-medium text-text-muted uppercase tracking-wider px-3 py-2 hidden sm:table-cell">
+                                Vlr Unit
+                              </th>
+                              <th className="text-right text-xs font-medium text-text-muted uppercase tracking-wider px-3 py-2 hidden sm:table-cell">
+                                Total
+                              </th>
+                              <th className="px-3 py-2 w-8">
+                                <button
+                                  title="Limpar lista"
+                                  onClick={() => { setParsedMedications([]); if (pdfInputRef.current) pdfInputRef.current.value = ""; }}
+                                  className="text-text-muted hover:text-error transition-colors"
+                                >
+                                  <X size={14} />
+                                </button>
+                              </th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {parsedMedications.map((med, idx) => (
+                              <tr key={idx} className="border-b border-border-light last:border-0">
+                                <td className="px-3 py-2 text-xs text-text-muted font-mono hidden md:table-cell">{med.product_code || "—"}</td>
+                                <td className="px-3 py-2 text-text-primary max-w-[220px]">
+                                  <div className="truncate" title={med.medication_name}>{med.medication_name}</div>
+                                  <div className="text-xs text-text-muted">{med.supplier_name}</div>
+                                </td>
+                                <td className="px-3 py-2 text-text-secondary">{med.quantity}</td>
+                                <td className="px-3 py-2 text-text-secondary">{med.unit}</td>
+                                <td className="px-3 py-2 text-right text-text-secondary hidden sm:table-cell">
+                                  {med.unit_price > 0
+                                    ? med.unit_price.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+                                    : "—"}
+                                </td>
+                                <td className="px-3 py-2 text-right font-medium text-text-primary hidden sm:table-cell">
+                                  {med.unit_price > 0
+                                    ? (med.unit_price * med.quantity).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })
+                                    : "—"}
+                                </td>
+                                <td className="px-3 py-2">
+                                  <button
+                                    onClick={() => setParsedMedications((prev) => prev.filter((_, i) => i !== idx))}
+                                    className="text-text-muted hover:text-error transition-colors"
+                                    title="Remover item"
+                                  >
+                                    <X size={13} />
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                          {parsedMedications.some((m) => m.unit_price > 0) && (
+                            <tfoot>
+                              <tr className="border-t border-border bg-neutral-50">
+                                <td colSpan={5} className="px-3 py-2 text-xs text-text-muted text-right hidden sm:table-cell">
+                                  Total do pedido:
+                                </td>
+                                <td colSpan={3} className="px-3 py-2 text-sm font-semibold text-text-primary text-right hidden sm:table-cell">
+                                  {parsedMedications
+                                    .reduce((sum, m) => sum + m.unit_price * m.quantity, 0)
+                                    .toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                                </td>
+                                <td className="sm:hidden px-3 py-2 text-xs text-text-muted">
+                                  Total:{" "}
+                                  {parsedMedications
+                                    .reduce((sum, m) => sum + m.unit_price * m.quantity, 0)
+                                    .toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                                </td>
+                              </tr>
+                            </tfoot>
+                          )}
+                        </table>
+                      </div>
+
+                      <div className="flex justify-end">
+                        <Button
+                          variant="premium"
+                          onClick={confirmBatchEntry}
+                          disabled={batchSubmitting}
+                        >
+                          <CheckCircle size={15} className="mr-1.5" />
+                          {batchSubmitting ? "Registrando..." : `Confirmar Entrada (${parsedMedications.length} itens)`}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </Card>
+
                 <Card>
                   <h2 className="font-medium text-text-primary mb-4">Estoque de Medicações</h2>
                   <div className="space-y-4">
@@ -721,8 +1034,8 @@ export default function FinanceiroPage() {
                       />
                       <Input
                         id="stock_batch"
-                        label="Lote"
-                        placeholder="Código do lote"
+                        label="Código / Lote"
+                        placeholder="Código do produto ou lote"
                         value={stockForm.batch_code}
                         onChange={(e) =>
                           setStockForm((p) => ({ ...p, batch_code: e.target.value }))
@@ -814,6 +1127,201 @@ export default function FinanceiroPage() {
                               </td>
                             </tr>
                           ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </Card>
+              </div>
+            ),
+          },
+          {
+            id: "inventario",
+            label: "Inventário",
+            content: (
+              <div className="space-y-6">
+                {/* Summary cards */}
+                {!inventoryLoading && !inventoryError && (
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <Card>
+                      <p className="text-xs text-text-muted mb-1">Total de Itens</p>
+                      <p className="text-2xl font-semibold text-text-primary">{inventory.length}</p>
+                    </Card>
+                    <Card>
+                      <p className="text-xs text-text-muted mb-1">Em Estoque</p>
+                      <p className="text-2xl font-semibold text-success">
+                        {inventory.filter((i) => i.current_stock > 5).length}
+                      </p>
+                    </Card>
+                    <Card>
+                      <p className="text-xs text-text-muted mb-1">Estoque Baixo</p>
+                      <p className="text-2xl font-semibold text-warning">
+                        {inventory.filter((i) => i.current_stock > 0 && i.current_stock <= 5).length}
+                      </p>
+                    </Card>
+                    <Card>
+                      <p className="text-xs text-text-muted mb-1">Zerados</p>
+                      <p className="text-2xl font-semibold text-error">
+                        {inventory.filter((i) => i.current_stock <= 0).length}
+                      </p>
+                    </Card>
+                  </div>
+                )}
+
+                {/* Sale form */}
+                <Card>
+                  <div className="flex items-center gap-2 mb-4">
+                    <ShoppingCart size={16} className="text-accent-dark" />
+                    <h2 className="font-medium text-text-primary">Registrar Venda / Saída para Paciente</h2>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input
+                        id="sale_patient"
+                        label="Paciente *"
+                        placeholder="Nome do paciente"
+                        value={saleForm.patient_name}
+                        onChange={(e) => setSaleForm((p) => ({ ...p, patient_name: e.target.value }))}
+                      />
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-sm font-medium text-text-secondary" htmlFor="sale_medication">
+                          Medicação *
+                        </label>
+                        <select
+                          id="sale_medication"
+                          className="w-full px-4 py-3 bg-white border border-border rounded-[var(--radius-md)] text-text-primary"
+                          value={saleForm.medication_name}
+                          onChange={(e) => setSaleForm((p) => ({ ...p, medication_name: e.target.value }))}
+                        >
+                          <option value="">Selecione uma medicação...</option>
+                          {inventory
+                            .filter((i) => i.current_stock > 0)
+                            .map((i) => (
+                              <option key={i.medication_name} value={i.medication_name}>
+                                {i.medication_name} ({i.current_stock} {i.unit} disponível)
+                              </option>
+                            ))}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Input
+                        id="sale_quantity"
+                        type="number"
+                        min="1"
+                        step="1"
+                        label="Quantidade *"
+                        value={saleForm.quantity}
+                        onChange={(e) => setSaleForm((p) => ({ ...p, quantity: e.target.value }))}
+                      />
+                      <Input
+                        id="sale_date"
+                        type="date"
+                        label="Data"
+                        value={saleForm.occurred_at}
+                        onChange={(e) => setSaleForm((p) => ({ ...p, occurred_at: e.target.value }))}
+                      />
+                      <Input
+                        id="sale_notes"
+                        label="Observações"
+                        placeholder="Opcional"
+                        value={saleForm.notes}
+                        onChange={(e) => setSaleForm((p) => ({ ...p, notes: e.target.value }))}
+                      />
+                    </div>
+                    <div className="flex justify-end">
+                      <Button variant="premium" onClick={submitSale} disabled={saleSubmitting}>
+                        <ShoppingCart size={15} className="mr-1.5" />
+                        {saleSubmitting ? "Registrando..." : "Confirmar Saída"}
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Inventory table */}
+                <Card>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <Package size={16} className="text-accent-dark" />
+                      <h2 className="font-medium text-text-primary">Posição de Estoque</h2>
+                    </div>
+                    <button
+                      onClick={fetchInventory}
+                      className="text-xs text-text-muted hover:text-text-primary transition-colors"
+                    >
+                      Atualizar
+                    </button>
+                  </div>
+
+                  {inventoryLoading ? (
+                    <p className="text-sm text-text-muted">Carregando...</p>
+                  ) : inventoryError ? (
+                    <p className="text-sm text-error">{inventoryError}</p>
+                  ) : inventory.length === 0 ? (
+                    <p className="text-sm text-text-muted">Nenhuma movimentação registrada ainda.</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-border-light">
+                            <th className="text-left text-xs font-medium text-text-muted uppercase tracking-wider px-2 py-3">
+                              Medicação
+                            </th>
+                            <th className="text-right text-xs font-medium text-text-muted uppercase tracking-wider px-2 py-3">
+                              Entradas
+                            </th>
+                            <th className="text-right text-xs font-medium text-text-muted uppercase tracking-wider px-2 py-3">
+                              Saídas
+                            </th>
+                            <th className="text-right text-xs font-medium text-text-muted uppercase tracking-wider px-2 py-3">
+                              Saldo
+                            </th>
+                            <th className="text-center text-xs font-medium text-text-muted uppercase tracking-wider px-2 py-3">
+                              Status
+                            </th>
+                            <th className="text-left text-xs font-medium text-text-muted uppercase tracking-wider px-2 py-3 hidden md:table-cell">
+                              Última Saída
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {inventory.map((item) => {
+                            const isOut = item.current_stock <= 0;
+                            const isLow = item.current_stock > 0 && item.current_stock <= 5;
+                            return (
+                              <tr key={item.medication_name} className="border-b border-border-light last:border-0">
+                                <td className="px-2 py-3 text-text-primary font-medium max-w-[240px]">
+                                  <div className="truncate" title={item.medication_name}>{item.medication_name}</div>
+                                  <div className="text-xs text-text-muted">{item.unit}</div>
+                                </td>
+                                <td className="px-2 py-3 text-right text-success">{item.total_entries}</td>
+                                <td className="px-2 py-3 text-right text-error">{item.total_exits}</td>
+                                <td className={`px-2 py-3 text-right font-semibold ${isOut ? "text-error" : isLow ? "text-warning" : "text-success"}`}>
+                                  {item.current_stock} {item.unit}
+                                </td>
+                                <td className="px-2 py-3 text-center">
+                                  {isOut ? (
+                                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-error/10 text-error">
+                                      <AlertTriangle size={10} /> Zerado
+                                    </span>
+                                  ) : isLow ? (
+                                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-warning/10 text-warning">
+                                      <AlertTriangle size={10} /> Baixo
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-success/10 text-success">
+                                      <CheckCircle size={10} /> OK
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="px-2 py-3 text-text-muted text-xs hidden md:table-cell">
+                                  {item.last_exit_at
+                                    ? new Date(item.last_exit_at).toLocaleDateString("pt-BR")
+                                    : "—"}
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>

@@ -142,9 +142,9 @@ export async function POST(request: Request) {
     let parserError: string | null = null;
 
     try {
-      const pdfParseModule = await import("pdf-parse") as unknown as { default?: (buffer: Buffer) => Promise<{ text: string }> } & ((buffer: Buffer) => Promise<{ text: string }>);
-      const pdfParse = typeof pdfParseModule.default === "function" ? pdfParseModule.default : pdfParseModule;
-      const parsed = await pdfParse(Buffer.from(buffer));
+      const { PDFParse } = await import("pdf-parse");
+      const pdfParser = new PDFParse({ data: Buffer.from(buffer) });
+      const parsed = await pdfParser.getText();
       extractedText = parsed?.text || "";
     } catch (error) {
       parserError = error instanceof Error ? error.message : "Erro ao ler PDF";

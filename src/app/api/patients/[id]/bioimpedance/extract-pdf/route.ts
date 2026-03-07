@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { PDFDocument } from "pdf-lib";
 
-// Type for pdf-parse
-type PdfParseResult = { text: string; numpages: number; info: Record<string, unknown> };
-type PdfParseFn = (buffer: Buffer) => Promise<PdfParseResult>;
-
-// Dynamic import to handle both ESM and CommonJS
-async function getPdfParse(): Promise<PdfParseFn> {
-  const mod = await import("pdf-parse") as unknown as { default?: PdfParseFn } & PdfParseFn;
-  return typeof mod.default === "function" ? mod.default : mod;
+// Extract text from a PDF buffer using pdf-parse v2 class-based API
+async function extractPdfText(buffer: Buffer): Promise<string> {
+  const { PDFParse } = await import("pdf-parse");
+  const parser = new PDFParse({ data: buffer });
+  const result = await parser.getText();
+  return result?.text ?? "";
 }
 
 /**
@@ -269,19 +266,7 @@ export async function POST(
 
     let extractedText = "";
     try {
-      // Use pdf-parse correctly to extract text from PDF
-      const pdfParse = await getPdfParse();
-      const pdfData = await pdfParse(buffer);
-
-      // Extract text from all pages
-      if (pdfData.text) {
-        extractedText = pdfData.text;
-      } else if (pdfData.numpages && pdfData.numpages > 0) {
-        // Fallback: try to extract from page structure
-        console.warn("No text extracted, attempting page structure extraction");
-      }
-
-      // Log extracted text length for debugging
+      extractedText = await extractPdfText(buffer);
       console.log(`Extracted ${extractedText.length} characters from PDF`);
     } catch (parseError) {
       console.error("PDF parsing error:", parseError);

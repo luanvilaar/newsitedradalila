@@ -108,9 +108,10 @@ export async function POST(request: Request) {
       );
     }
 
-    if (!body.supplier_name) {
+    // supplier_name is required for entries, optional for exits (sales to patients)
+    if (body.movement_type === "entry" && !body.supplier_name) {
       return NextResponse.json(
-        { error: "Empresa fornecedora é obrigatória." },
+        { error: "Empresa fornecedora é obrigatória para entradas." },
         { status: 400 }
       );
     }

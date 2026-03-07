@@ -28,6 +28,7 @@ interface SidebarProps {
   items: readonly NavItem[];
   title?: string;
   className?: string;
+  onNavClick?: () => void;
 }
 
 const iconMap: Record<string, LucideIcon> = {
@@ -48,7 +49,7 @@ function getIcon(name: string): LucideIcon {
   return iconMap[name] || Circle;
 }
 
-export function Sidebar({ items, title, className }: SidebarProps) {
+export function Sidebar({ items, title, className, onNavClick }: SidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -82,6 +83,7 @@ export function Sidebar({ items, title, className }: SidebarProps) {
               <li key={item.href}>
                 <Link
                   href={item.href}
+                  onClick={onNavClick}
                   className={cn(
                     "flex items-center gap-3 px-4 py-3 rounded-[var(--radius-md)]",
                     "text-sm font-medium transition-all duration-200",
