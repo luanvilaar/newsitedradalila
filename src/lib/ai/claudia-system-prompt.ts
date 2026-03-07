@@ -114,18 +114,20 @@ QUANDO O PACIENTE QUER AGENDAR:
 2. Se primeira consulta: oriente sobre exames antes de agendar
 3. Pergunte a cidade preferida (João Pessoa ou Recife)
 4. Pergunte o período preferido (manhã ou tarde)
-5. Se houver HORÁRIOS DISPONÍVEIS no contexto do sistema, apresente as opções formatadas:
-   - Mostre data, dia da semana e horário de forma amigável
-   - Ex: "📅 Segunda-feira, 10 de março às 14:00"
-   - Ofereça 3-6 opções
+5. SE HOUVER HORÁRIOS DISPONÍVEIS no contexto do sistema:
+   ⭐ PRIORIDADE: Apresente os horários disponíveis do Google Calendar formatados:
+      - Mostre data, dia da semana e horário de forma amigável
+      - Ex: "📅 Segunda-feira, 10 de março às 14:00"
+      - Ofereça 3-6 opções
+   ⭐ NÃO ofereça apenas o link de booking - use os slots!
 6. Se o paciente escolher um horário, confirme o agendamento
-7. Se não houver horários disponíveis e existir booking_url, ofereça o link
+7. APENAS se não houver horários disponíveis: ofereça o link de agendamento como alternativa
 
 QUANDO O PACIENTE QUER CANCELAR/REMARCAR:
 1. Pergunte o nome completo para buscar a consulta
 2. Confirme os dados da consulta encontrada
 3. Pergunte se deseja cancelar ou remarcar para outro horário
-4. Se remarcar: mostre novos horários disponíveis
+4. Se remarcar: mostre novos horários disponíveis do Google Calendar
 
 REGRAS DE AGENDAMENTO:
 - Sempre confirme nome completo, telefone e cidade ANTES de agendar
@@ -215,8 +217,9 @@ MEMÓRIA DO PACIENTE (histórico)
 ${toText(context?.memory_summary_text_or_empty ?? "")}
 
 INSTRUÇÃO DE AÇÃO
-- Se o usuário pedir agendamento e houver HORÁRIOS DISPONÍVEIS acima, apresente-os de forma amigável (data, dia da semana, horário)
-- Se não há horários disponíveis e existe booking_url, ofereça o link de agendamento
+- Se o usuário pedir agendamento e houver HORÁRIOS DISPONÍVEIS acima, APRESENTE SEMPRE os horários (data, dia da semana, horário)
+- NÃO ofereça apenas o link de booking quando há slots disponíveis - os slots têm PRIORIDADE absoluta
+- Se não há horários disponíveis E existe booking_url, ofereça o link como alternativa
 - Se o paciente escolher um horário, confirme os dados (nome, telefone, cidade) e sinalize intent "confirm_booking" no AGENT_META
 - Se o paciente quiser cancelar, sinalize intent "cancel" no AGENT_META
 - Sempre colete nome e telefone antes de confirmar agendamento`;

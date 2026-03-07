@@ -121,8 +121,9 @@ function localClaudiaReply(
     const options = topSlots
       .map((slot, idx) => {
         const date = typeof slot.date === "string" ? slot.date : "data";
+        const day = typeof slot.dayOfWeek === "string" ? slot.dayOfWeek : "";
         const time = typeof slot.time === "string" ? slot.time : "horário";
-        return `${idx + 1}) ${date} às ${time}`;
+        return `${idx + 1}) ${day}, ${date} às ${time}`;
       })
       .join("\n");
 
@@ -214,16 +215,28 @@ async function enrichContextWithSlots(
 ): Promise<ChatSystemContext> {
   const enriched: ChatSystemContext = { ...ctx };
 
-  if (detectsSchedulingIntent(userMessage) && isCalendarIntegrationActive()) {
-    try {
-      const slots = await getAvailableSlots(90); // 3 meses de disponibilidade
-      // Pegar os próximos 6 slots para mostrar ao paciente
-      const topSlots = slots.slice(0, 6);
-      if (topSlots.length > 0) {
-        enriched.slots_json_or_text = topSlots;
+  if (detectsSchedulingIntent(userMessage)) {
+    const integrationActive = isCalendarIntegrationActive();
+    console.log("[Chat] Scheduling intent detected. Calendar integration active:", integrationActive);
+
+    if (integrationActive) {
+      try {
+        const slots = await getAvailableSlots(90); // 3 meses de disponibilidade
+        console.log(`[Chat] Retrieved ${slots.length} available slots from Google Calendar API`);
+
+        // Pegar os próximos 6 slots para mostrar ao paciente
+        const topSlots = slots.slice(0, 6);
+        if (topSlots.length > 0) {
+          enriched.slots_json_or_text = topSlots;
+          console.log(`[Chat] Using top ${topSlots.length} slots in chat context`);
+        } else {
+          console.log("[Chat] No available slots found in calendar");
+        }
+      } catch (error) {
+        console.error("[Chat] Erro ao buscar slots para o chat:", error);
       }
-    } catch (error) {
-      console.error("Erro ao buscar slots para o chat:", error);
+    } else {
+      console.log("[Chat] Calendar integration not active - skipping slot retrieval");
     }
   }
 
