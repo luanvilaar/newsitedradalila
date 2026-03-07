@@ -5,21 +5,21 @@ import Image from "next/image";
 
 export function Authority() {
   return (
-    <section className="py-24 bg-white overflow-hidden">
+    <section className="py-16 md:py-24 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto px-4">
 
         {/* Centered section title */}
         <motion.div
-          className="text-center mb-16"
+          className="text-center mb-10 md:mb-16"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
         >
-          <p className="font-elegant text-accent-gold text-lg tracking-wider mb-2">
+          <p className="font-elegant text-accent-gold text-base md:text-lg tracking-wider mb-2">
             Autoridade Médica
           </p>
-          <h2 className="font-heading text-5xl md:text-6xl text-accent-dark tracking-wide">
+          <h2 className="font-heading text-3xl md:text-6xl text-accent-dark tracking-wide">
             DRA. DALILA LUCENA
           </h2>
           <div className="mt-4 h-px w-24 mx-auto bg-gradient-to-r from-transparent via-accent-gold to-transparent" />
@@ -59,8 +59,8 @@ export function Authority() {
             </div>
           </motion.div>
 
-          {/* Col 2: Two stacked credential cards */}
-          <div className="flex flex-col gap-5">
+          {/* Col 2: Two stacked credential cards — hidden on mobile */}
+          <div className="hidden lg:flex flex-col gap-5">
             {/* Congress card */}
             <motion.div
               className="relative flex-1 rounded-[var(--radius-2xl)] overflow-hidden group shadow-[var(--shadow-md)] border border-accent-gold/25 cursor-pointer"

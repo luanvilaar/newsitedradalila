@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/Button";
 
 export function PremiumCTA() {
   return (
-    <section className="relative py-32 px-4 overflow-hidden">
+    <section className="relative py-20 md:py-32 px-4 overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0 bg-accent-dark">
         {/* Subtle gold gradient overlay */}
@@ -38,7 +38,7 @@ export function PremiumCTA() {
         </motion.p>
 
         <motion.h2
-          className="font-heading text-4xl md:text-6xl text-white tracking-wider leading-tight mb-6"
+          className="font-heading text-3xl md:text-6xl text-white tracking-wider leading-tight mb-6"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -50,7 +50,7 @@ export function PremiumCTA() {
         </motion.h2>
 
         <motion.p
-          className="text-white/60 text-lg mb-10 max-w-xl mx-auto"
+          className="text-white/60 text-base md:text-lg mb-8 max-w-xl mx-auto"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}

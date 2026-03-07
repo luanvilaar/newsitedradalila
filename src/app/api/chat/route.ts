@@ -204,6 +204,18 @@ function detectsSchedulingIntent(text: string): boolean {
     "horário", "horario", "disponível", "disponivel",
     "quando posso", "data", "agenda", "cancelar",
     "desmarcar", "remarcar",
+    // intenção de período/tempo
+    "semana", "próxima semana", "proxima semana",
+    "próximo", "proximo", "próxima", "proxima",
+    "amanhã", "amanha", "hoje", "fim de semana",
+    "segunda", "terça", "quarta", "quinta", "sexta",
+    "janeiro", "fevereiro", "março", "abril", "maio", "junho",
+    "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+    // intenção de atendimento
+    "atendimento", "disponibilidade", "vaga", "vagas",
+    "período", "periodo", "turno", "manhã", "tarde",
+    // cidades (indica intenção de agendar em determinada cidade)
+    "joao pessoa", "joão pessoa", "recife", "jp",
   ];
   return keywords.some((kw) => normalized.includes(kw));
 }
@@ -224,8 +236,8 @@ async function enrichContextWithSlots(
         const slots = await getAvailableSlots(90); // 3 meses de disponibilidade
         console.log(`[Chat] Retrieved ${slots.length} available slots from Google Calendar API`);
 
-        // Pegar os próximos 6 slots para mostrar ao paciente
-        const topSlots = slots.slice(0, 6);
+        // Passar todos os slots do mês (agenda completa)
+        const topSlots = slots;
         if (topSlots.length > 0) {
           enriched.slots_json_or_text = topSlots;
           console.log(`[Chat] Using top ${topSlots.length} slots in chat context`);

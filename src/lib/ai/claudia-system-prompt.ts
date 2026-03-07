@@ -164,14 +164,42 @@ function formatSlots(slots: unknown): string {
     return "Nenhum horário disponível no momento (use o booking_url como alternativa)";
   }
 
-  return slots
-    .map((slot: { date?: string; time?: string; dayOfWeek?: string }, i: number) => {
-      const date = slot.date || "data";
-      const time = slot.time || "horário";
-      const day = slot.dayOfWeek || "";
-      return `${i + 1}) ${day}, ${date} às ${time}`;
-    })
-    .join("\n");
+  // Agrupar por mês → por dia
+  const byMonth = new Map<string, Map<string, { dayOfWeek: string; times: string[] }>>();
+
+  for (const slot of slots as { date?: string; time?: string; dayOfWeek?: string }[]) {
+    const date = slot.date || "";
+    const time = slot.time || "";
+    const dayOfWeek = slot.dayOfWeek || "";
+    if (!date || !time) continue;
+
+    const [year, month] = date.split("-");
+    const monthKey = `${year}-${month}`;
+
+    if (!byMonth.has(monthKey)) byMonth.set(monthKey, new Map());
+    const byDay = byMonth.get(monthKey)!;
+
+    if (!byDay.has(date)) byDay.set(date, { dayOfWeek, times: [] });
+    byDay.get(date)!.times.push(time);
+  }
+
+  const MONTH_NAMES_PT = [
+    "", "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro",
+  ];
+
+  const lines: string[] = [];
+  for (const [monthKey, byDay] of byMonth) {
+    const [year, month] = monthKey.split("-");
+    lines.push(`📅 ${MONTH_NAMES_PT[parseInt(month)]} ${year}`);
+    for (const [date, { dayOfWeek, times }] of byDay) {
+      const [, , day] = date.split("-");
+      lines.push(`  • ${dayOfWeek}, ${day}/${month}: ${times.join(" | ")}`);
+    }
+    lines.push("");
+  }
+
+  return lines.join("\n").trim();
 }
 
 export const buildClaudiaContext = (context?: {
@@ -217,7 +245,8 @@ MEMÓRIA DO PACIENTE (histórico)
 ${toText(context?.memory_summary_text_or_empty ?? "")}
 
 INSTRUÇÃO DE AÇÃO
-- Se o usuário pedir agendamento e houver HORÁRIOS DISPONÍVEIS acima, APRESENTE SEMPRE os horários (data, dia da semana, horário)
+- Se o usuário pedir agendamento e houver HORÁRIOS DISPONÍVEIS acima, APRESENTE SEMPRE a agenda do mês formatada por dia
+- A agenda deve mostrar: mês, e para cada dia o dia da semana, data e horários disponíveis (ex: "• Segunda, 10/03: 08:00 | 09:00 | 14:00")
 - NÃO ofereça apenas o link de booking quando há slots disponíveis - os slots têm PRIORIDADE absoluta
 - Se não há horários disponíveis E existe booking_url, ofereça o link como alternativa
 - Se o paciente escolher um horário, confirme os dados (nome, telefone, cidade) e sinalize intent "confirm_booking" no AGENT_META

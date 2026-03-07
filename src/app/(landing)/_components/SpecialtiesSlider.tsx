@@ -30,7 +30,7 @@ const imagePositionMap: Record<string, string> = {
 
 export function SpecialtiesSlider() {
   return (
-    <section className="py-24 bg-surface overflow-hidden">
+    <section className="py-16 md:py-24 bg-surface overflow-hidden">
       <div className="max-w-6xl mx-auto px-4 mb-16">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -46,10 +46,10 @@ export function SpecialtiesSlider() {
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
           >
-            <p className="font-elegant text-accent-gold text-lg mb-2 tracking-wider">
+            <p className="font-elegant text-accent-gold text-base md:text-lg mb-2 tracking-wider">
               Áreas de Atuação
             </p>
-            <h2 className="font-heading text-4xl md:text-5xl text-accent-dark tracking-wide mb-6">
+            <h2 className="font-heading text-3xl md:text-5xl text-accent-dark tracking-wide mb-6">
               ESPECIALIDADES
             </h2>
             <div className="h-1 w-20 bg-gradient-to-r from-accent-gold via-accent-gold/50 to-transparent rounded-full" />
@@ -91,7 +91,7 @@ export function SpecialtiesSlider() {
             return (
               <motion.div
                 key={specialty.id}
-                className="group relative h-[400px] w-full overflow-hidden rounded-[var(--radius-xl)] bg-surface shadow-lg transition-all duration-500 hover:shadow-2xl hover:-translate-y-2"
+                className="group relative h-[300px] sm:h-[380px] lg:h-[400px] w-full overflow-hidden rounded-[var(--radius-xl)] bg-surface shadow-lg transition-all duration-500 hover:shadow-2xl hover:-translate-y-2"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}

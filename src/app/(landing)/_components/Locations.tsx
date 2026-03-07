@@ -38,7 +38,7 @@ const locations: LocationCard[] = [
     description:
       "Consultas presenciais com a mesma excelência e abordagem individualizada.",
     mapsUrl:
-      "https://www.google.com/maps/search/?api=1&query=Av.%20Mal.%20Mascarenhas%20de%20Morais%2C%204861%20-%20Imbiribeira%2C%20Recife%20-%20PE%2C%2051150-000",
+      "https://www.google.com.br/maps/place/Sutille+Cl%C3%ADnica/@-8.1277968,-34.9177799,17z/data=!3m1!4b1!4m6!3m5!1s0x7ab1f9213fb42b5:0x834d65a76aeb9071!8m2!3d-8.1277968!4d-34.915205!16s%2Fg%2F11str0mq_3?entry=ttu&g_ep=EgoyMDI2MDMwNC4xIKXMDSoASAFQAw%3D%3D",
     wazeUrl:
       "https://waze.com/ul?q=Av.%20Mal.%20Mascarenhas%20de%20Morais%2C%204861%20-%20Imbiribeira%2C%20Recife%20-%20PE%2C%2051150-000&navigate=yes",
     instagramUrl: "https://www.instagram.com/sutilleclinica/",
@@ -47,28 +47,28 @@ const locations: LocationCard[] = [
 
 export function Locations() {
   return (
-    <section className="py-24 px-4 bg-surface">
+    <section className="py-16 md:py-24 px-4 bg-surface">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-10 md:mb-16"
         >
-          <p className="font-elegant text-accent-gold text-lg mb-2 tracking-wider">
+          <p className="font-elegant text-accent-gold text-base md:text-lg mb-2 tracking-wider">
             Onde Atendemos
           </p>
-          <h2 className="font-heading text-4xl md:text-5xl text-accent-dark tracking-wide">
+          <h2 className="font-heading text-3xl md:text-5xl text-accent-dark tracking-wide">
             CIDADES DE ATENDIMENTO
           </h2>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="grid md:grid-cols-2 gap-5 md:gap-8">
           {locations.map((location, index) => (
             <motion.div
               key={location.city}
-              className="relative bg-white rounded-[var(--radius-xl)] p-8 md:p-10 border border-accent-gold/20
+              className="relative bg-white rounded-[var(--radius-xl)] p-6 md:p-10 border border-accent-gold/20
                 shadow-[var(--shadow-md)] overflow-hidden group transition-all duration-300 cursor-pointer
                 hover:border-accent-gold/40 hover:shadow-[var(--shadow-lg)]"
               initial={{ opacity: 0, y: 30 }}

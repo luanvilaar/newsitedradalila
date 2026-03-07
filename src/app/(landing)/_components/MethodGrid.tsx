@@ -45,31 +45,31 @@ const differentials = [
 
 export function MethodGrid() {
   return (
-    <section className="py-24 px-4 bg-white">
+    <section className="py-16 md:py-24 px-4 bg-white">
       <div className="max-w-6xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-10 md:mb-16"
         >
-          <p className="font-elegant text-accent-gold text-lg mb-2 tracking-wider">
+          <p className="font-elegant text-accent-gold text-base md:text-lg mb-2 tracking-wider">
             Como Trabalhamos
           </p>
-          <h2 className="font-heading text-4xl md:text-5xl text-accent-dark tracking-wide">
+          <h2 className="font-heading text-3xl md:text-5xl text-accent-dark tracking-wide">
             MÉTODO E DIFERENCIAIS
           </h2>
         </motion.div>
 
-        {/* Asymmetric Grid */}
-        <div className="grid md:grid-cols-4 gap-6">
+        {/* Asymmetric Grid — 1 col mobile, 2 col sm, 4 col md+ */}
+        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
           {differentials.map((item, index) => {
             const Icon = item.icon;
             return (
               <motion.div
                 key={item.title}
-                className={`${item.span} rounded-[var(--radius-xl)] p-8 border transition-all duration-300 cursor-default group
+                className={`${item.span} rounded-[var(--radius-xl)] p-5 md:p-8 border transition-all duration-300 cursor-default group
                   ${item.featured
                     ? "bg-accent-dark text-white border-accent-gold/30 shadow-[var(--shadow-lg)] hover:border-accent-gold/60 hover:shadow-[var(--shadow-xl)] hover:scale-105 hover:y-[-8px]"
                     : "bg-white border-accent-gold/20 shadow-[var(--shadow-md)] hover:border-accent-gold/40 hover:shadow-[var(--shadow-lg)] hover:scale-102 hover:y-[-4px]"}`}

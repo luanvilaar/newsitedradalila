@@ -33,7 +33,7 @@ export function Hero() {
       <div className="relative z-10 min-h-screen grid md:grid-cols-[55%_45%]">
 
         {/* ── Left: Text Content ── */}
-        <div className="flex flex-col justify-center px-8 md:px-14 lg:px-20 xl:px-28 py-28 md:py-0 text-center md:text-left">
+        <div className="flex flex-col justify-center px-6 md:px-14 lg:px-20 xl:px-28 pt-20 pb-10 md:py-0 text-center md:text-left">
 
           {/* Gold accent rule */}
           <motion.div
@@ -71,7 +71,7 @@ export function Hero() {
 
           {/* H1 — exactly 2 lines */}
           <motion.h1
-            className="font-heading text-[2.65rem] md:text-[3rem] lg:text-[3.5rem] text-accent-dark leading-[1.12] tracking-tight mb-5"
+            className="font-heading text-[2rem] sm:text-[2.65rem] md:text-[3rem] lg:text-[3.5rem] text-accent-dark leading-[1.12] tracking-tight mb-5"
             initial={{ opacity: 0, y: 28 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.38 }}
@@ -107,7 +107,7 @@ export function Hero() {
 
           {/* Subtitle */}
           <motion.p
-            className="font-body text-base md:text-[1.05rem] text-text-secondary leading-relaxed max-w-[420px] mx-auto md:mx-0 mb-10"
+            className="font-body text-sm md:text-[1.05rem] text-text-secondary leading-relaxed max-w-[420px] mx-auto md:mx-0 mb-7"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.63 }}
@@ -118,7 +118,7 @@ export function Hero() {
 
           {/* CTAs */}
           <motion.div
-            className="flex flex-col sm:flex-row items-center md:items-start gap-3 mb-14"
+            className="flex flex-col sm:flex-row items-center md:items-start gap-3 mb-8 md:mb-14"
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.76 }}
@@ -127,29 +127,48 @@ export function Hero() {
               href="https://calendar.google.com/calendar/appointments/schedules/AcZssZ304GQnQvezrYe8wYoeIY3Z9jumbUKc7oHPExOJWnWI2pt3lNbq80np2s8J7fydjXTDGCpuRxo1?gv=true"
               target="_blank"
               rel="noreferrer"
+              className="w-full sm:w-auto"
             >
               <Button
                 variant="premium"
                 size="lg"
-                className="min-w-[196px]"
+                className="w-full sm:w-auto sm:min-w-[196px]"
               >
                 Agendar Consulta
               </Button>
             </Link>
-            <Link href="/login" className="group">
+            <Link href="/login" className="group w-full sm:w-auto">
               <Button
                 variant="outline"
                 size="lg"
-                className="min-w-[196px] border-accent-dark/20 text-accent-dark group-hover:border-accent-gold group-hover:text-accent-gold transition-all duration-300"
+                className="w-full sm:w-auto sm:min-w-[196px] border-accent-dark/20 text-accent-dark group-hover:border-accent-gold group-hover:text-accent-gold transition-all duration-300"
               >
                 Área do Paciente
               </Button>
             </Link>
           </motion.div>
 
-          {/* Stats strip */}
+          {/* Mobile hero image */}
           <motion.div
-            className="hidden md:flex items-start pt-8 border-t border-border/60"
+            className="block md:hidden relative w-full max-w-sm mx-auto h-64 rounded-2xl overflow-hidden mb-8"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+          >
+            <Image
+              src="/hero-dalila.png"
+              alt="Dra. Dalila Lucena"
+              fill
+              className="object-cover object-top"
+              sizes="100vw"
+              priority
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#F5F0EB]/70 via-transparent to-transparent" />
+          </motion.div>
+
+          {/* Stats strip — desktop row, mobile 3-cols */}
+          <motion.div
+            className="flex items-start pt-6 border-t border-border/60 justify-center md:justify-start gap-0"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.95 }}
@@ -157,13 +176,13 @@ export function Hero() {
             {stats.map((stat, i) => (
               <div key={stat.label} className="flex items-stretch">
                 {i > 0 && (
-                  <div className="w-px bg-border/60 mx-8 self-stretch" />
+                  <div className="w-px bg-border/60 mx-5 md:mx-8 self-stretch" />
                 )}
-                <div>
-                  <p className="font-heading text-[1.75rem] text-accent-gold leading-none">
+                <div className="text-center md:text-left">
+                  <p className="font-heading text-[1.4rem] md:text-[1.75rem] text-accent-gold leading-none">
                     {stat.value}
                   </p>
-                  <p className="font-body text-[0.6rem] tracking-[0.15em] uppercase text-text-muted mt-1.5">
+                  <p className="font-body text-[0.55rem] tracking-[0.12em] uppercase text-text-muted mt-1">
                     {stat.label}
                   </p>
                 </div>
