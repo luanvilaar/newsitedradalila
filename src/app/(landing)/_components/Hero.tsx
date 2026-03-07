@@ -150,7 +150,7 @@ export function Hero() {
 
           {/* Mobile hero image */}
           <motion.div
-            className="block md:hidden relative w-full max-w-sm mx-auto h-64 rounded-2xl overflow-hidden mb-8"
+            className="block md:hidden relative w-full mx-auto rounded-2xl overflow-hidden mb-8 aspect-[3/4]"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
@@ -159,11 +159,16 @@ export function Hero() {
               src="/hero-dalila.png"
               alt="Dra. Dalila Lucena"
               fill
-              className="object-cover object-top"
+              className="object-cover object-center"
               sizes="100vw"
               priority
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#F5F0EB]/70 via-transparent to-transparent" />
+            {/* Subtle blending gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#F5F0EB]/40 via-transparent to-transparent" />
+            {/* Gentle left-side fade for seamless blend */}
+            <div className="absolute inset-y-0 left-0 w-12 bg-gradient-to-r from-[#FAFAF7]/60 to-transparent" />
+            {/* Gentle right-side fade */}
+            <div className="absolute inset-y-0 right-0 w-12 bg-gradient-to-l from-[#FAFAF7]/40 to-transparent" />
           </motion.div>
 
           {/* Stats strip — desktop row, mobile 3-cols */}
@@ -208,7 +213,7 @@ export function Hero() {
             src="/hero-dalila.png"
             alt="Dra. Dalila Lucena — Medicina de Performance e Longevidade"
             fill
-            className="object-cover object-top"
+            className="object-cover object-center"
             sizes="45vw"
             priority
           />
