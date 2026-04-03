@@ -1,7 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendText, sendMedia } from "@/lib/whatsapp/uazapi";
+import { createAdminClient } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
+
+function normalizePhone(phone: string): string {
+  return phone.replace(/\D/g, "");
+}
+
+async function saveOutboundMessage(phone: string, text: string) {
+  try {
+    const adminClient = createAdminClient();
+    const waPhone = normalizePhone(phone);
+
+    await adminClient.from("wa_messages").insert({
+      wa_phone: waPhone,
+      role: "assistant",
+      content: text,
+    });
+
+    await adminClient.from("wa_conversations").upsert(
+      { wa_phone: waPhone, updated_at: new Date().toISOString() },
+      { onConflict: "wa_phone" }
+    );
+  } catch (error) {
+    console.error("Error saving outbound message:", error);
+  }
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -22,6 +47,9 @@ export async function POST(req: NextRequest) {
         mediaUrl: body.mediaUrl,
         caption: body.caption,
       });
+      if (result.ok) {
+        await saveOutboundMessage(body.phone, body.caption || "[mídia]");
+      }
       return NextResponse.json(result.data ?? { error: result.error }, {
         status: result.ok ? 200 : result.status,
       });
@@ -32,6 +60,9 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await sendText({ phone: body.phone, text: body.text });
+    if (result.ok) {
+      await saveOutboundMessage(body.phone, body.text);
+    }
     return NextResponse.json(result.data ?? { error: result.error }, {
       status: result.ok ? 200 : result.status,
     });
