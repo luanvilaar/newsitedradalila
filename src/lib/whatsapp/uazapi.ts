@@ -159,37 +159,51 @@ export function extractInboundMessage(payload: unknown): UazapiInboundMessage | 
 
   const body = payload as Record<string, unknown>;
 
-  // UAZAPI webhook payloads can have different structures:
-  // 1. Baileys format: { event, data: { key: { remoteJid, fromMe }, message: { conversation } } }
-  // 2. Flat format: { from, text, ... }
-  // 3. UAZAPI specific: { chatid, text, fromMe, sender, ... }
+  // UAZAPI real webhook format:
+  // {
+  //   message: { chatid, text, fromMe, senderName, messageid, messageTimestamp, ... },
+  //   chat: { phone, wa_chatid, wa_name, ... },
+  //   owner: "558399638013",
+  //   EventType: "messages"
+  // }
+  // Also support Baileys format: { event, data: { key: { remoteJid }, message: { conversation } } }
+
+  const msg =
+    body.message && typeof body.message === "object"
+      ? (body.message as Record<string, unknown>)
+      : null;
+
+  const chat =
+    body.chat && typeof body.chat === "object"
+      ? (body.chat as Record<string, unknown>)
+      : null;
+
   const data =
     body.data && typeof body.data === "object"
       ? (body.data as Record<string, unknown>)
-      : body;
+      : null;
 
   const key =
-    data.key && typeof data.key === "object"
+    data?.key && typeof data.key === "object"
       ? (data.key as Record<string, unknown>)
       : null;
 
-  const message =
-    data.message && typeof data.message === "object"
+  const dataMsg =
+    data?.message && typeof data.message === "object"
       ? (data.message as Record<string, unknown>)
       : null;
 
-  // Extract phone number - check key.remoteJid first (Baileys format)
+  // Extract phone number
   const phoneCandidates = [
+    msg?.chatid,
+    msg?.sender_pn,
+    chat?.wa_chatid,
+    chat?.phone,
     key?.remoteJid,
-    data.chatid,
-    data.sender,
-    data.from,
-    data.number,
-    data.phone,
-    data.wa_phone,
-    data.remoteJid,
-    message?.from,
-    message?.remoteJid,
+    body.chatid,
+    body.from,
+    body.number,
+    body.phone,
   ];
 
   let phone = phoneCandidates.find(
@@ -198,27 +212,26 @@ export function extractInboundMessage(payload: unknown): UazapiInboundMessage | 
 
   if (!phone) return null;
 
-  // Clean phone: remove @s.whatsapp.net / @g.us suffix and non-digits
-  if (phone.includes("@g.us")) return null; // Ignore group messages
-  phone = phone.replace(/@s\.whatsapp\.net$/, "").replace(/\D/g, "");
+  // Ignore group messages
+  if (phone.includes("@g.us")) return null;
+  phone = phone.replace(/@s\.whatsapp\.net$/, "").replace(/@lid$/, "").replace(/\D/g, "");
   if (!phone) return null;
 
   // Extract text content
-  const extendedText =
-    message?.extendedTextMessage && typeof message.extendedTextMessage === "object"
-      ? (message.extendedTextMessage as Record<string, unknown>)
-      : null;
-
   const textCandidates = [
-    data.text,
-    data.content,
-    data.body,
-    message?.conversation,
-    message?.text,
-    message?.content,
-    message?.body,
-    extendedText?.text,
+    msg?.text,
+    msg?.content,
+    msg?.body,
+    dataMsg?.conversation,
+    dataMsg?.text,
+    body.text,
+    body.content,
   ];
+
+  // Also check extendedTextMessage inside data.message (Baileys)
+  if (dataMsg?.extendedTextMessage && typeof dataMsg.extendedTextMessage === "object") {
+    textCandidates.push((dataMsg.extendedTextMessage as Record<string, unknown>).text);
+  }
 
   const text = textCandidates.find(
     (item) => typeof item === "string" && item.trim()
@@ -228,7 +241,7 @@ export function extractInboundMessage(payload: unknown): UazapiInboundMessage | 
 
   // Determine direction
   const fromMe =
-    data.fromMe === true ||
+    msg?.fromMe === true ||
     key?.fromMe === true ||
     body.fromMe === true;
 
@@ -239,14 +252,13 @@ export function extractInboundMessage(payload: unknown): UazapiInboundMessage | 
     text,
     source,
     messageId:
-      (typeof key?.id === "string" ? key.id : undefined) ||
-      (typeof data.messageId === "string" ? data.messageId : undefined) ||
-      (typeof data.messageid === "string" ? data.messageid : undefined),
+      (typeof msg?.messageid === "string" ? msg.messageid : undefined) ||
+      (typeof key?.id === "string" ? key.id : undefined),
     timestamp:
-      typeof data.messageTimestamp === "number" ? data.messageTimestamp :
-      typeof data.timestamp === "number" ? data.timestamp : undefined,
+      typeof msg?.messageTimestamp === "number" ? msg.messageTimestamp :
+      typeof body.messageTimestamp === "number" ? (body.messageTimestamp as number) : undefined,
     pushName:
-      (typeof data.pushName === "string" ? data.pushName : undefined) ||
-      (typeof data.senderName === "string" ? data.senderName : undefined),
+      (typeof msg?.senderName === "string" ? msg.senderName : undefined) ||
+      (typeof chat?.wa_name === "string" ? chat.wa_name : undefined),
   };
 }
