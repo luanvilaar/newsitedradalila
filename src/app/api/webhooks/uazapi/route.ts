@@ -26,13 +26,16 @@ export async function POST(req: NextRequest) {
     }
 
     const payload = (await req.json()) as unknown;
+    console.log("UAZAPI webhook payload:", JSON.stringify(payload));
+
     const message = extractInboundMessage(payload);
 
     if (!message) {
-      // UAZAPI sends various event types (status, presence, etc.)
-      // Return 200 for events we don't handle to avoid retries
+      console.log("UAZAPI webhook: could not extract message from payload");
       return NextResponse.json({ ignored: true });
     }
+
+    console.log("UAZAPI webhook: extracted message:", JSON.stringify(message));
 
     const adminClient = createAdminClient();
 
