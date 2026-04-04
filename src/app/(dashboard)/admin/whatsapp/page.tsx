@@ -81,8 +81,12 @@ function ConnectionPanel() {
     };
   }, [fetchStatus]);
 
-  const isConnected = instanceStatus?.status?.connected === true;
-  const isConnecting = instanceStatus?.instance?.status === "connecting";
+  const isConnected =
+    instanceStatus?.status?.connected === true ||
+    instanceStatus?.instance?.status === "connected";
+
+  const isConnecting =
+    instanceStatus?.instance?.status === "connecting";
   const qrCode = instanceStatus?.instance?.qrcode || "";
   const profileName = instanceStatus?.instance?.profileName || instanceStatus?.instance?.name || "";
   const owner = instanceStatus?.instance?.owner || "";

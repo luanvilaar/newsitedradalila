@@ -20,8 +20,10 @@ function isAuthorized(req: NextRequest): boolean {
 }
 
 export async function POST(req: NextRequest) {
+  console.log(`📥 Webhook UAZAPI recebido: ${req.method} em ${req.nextUrl.pathname}`);
   try {
     if (!isAuthorized(req)) {
+      console.warn("⚠️ Webhook UAZAPI: Não autorizado (Secret mismatch)");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
