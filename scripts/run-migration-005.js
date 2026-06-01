@@ -1,7 +1,12 @@
 const fs = require('fs');
 const path = require('path');
+require('dotenv').config({ path: '.env.local' });
 
-const SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjdmphaXVmcmJxY2xjeHByb2VlIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3MjQ5ODYwMiwiZXhwIjoyMDg4MDc0NjAyfQ._FVTBWDshPwJjMoVa7MXB8Dc1ocF-MaLP28rV75dehI';
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SERVICE_KEY) {
+  throw new Error('Configure SUPABASE_SERVICE_ROLE_KEY in .env.local');
+}
 
 const SQL = fs.readFileSync(
   path.join(__dirname, '..', 'supabase', 'migrations', '005_bioimpedance_exams.sql'),
