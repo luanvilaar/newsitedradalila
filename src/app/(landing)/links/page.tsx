@@ -16,7 +16,9 @@ import {
   ExternalLink,
   MessageSquare,
   Play,
-  RotateCcw
+  RotateCcw,
+  Volume2,
+  VolumeX
 } from "lucide-react";
 
 interface LinkTreeConfig {
@@ -110,6 +112,9 @@ export default function LinksPage() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const [videoProgress, setVideoProgress] = useState(0);
   const [videoEnded, setVideoEnded] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+  const [videoLoading, setVideoLoading] = useState(true);
+  const [videoError, setVideoError] = useState(false);
 
   const handleTimeUpdate = () => {
     if (!videoRef.current) return;
@@ -133,7 +138,14 @@ export default function LinksPage() {
     video.currentTime = 0;
     setVideoProgress(0);
     setVideoEnded(false);
+    setVideoLoading(false);
     video.play().catch(err => console.log("Erro ao reproduzir:", err));
+  };
+
+  const toggleMute = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setIsMuted(!isMuted);
   };
 
   useEffect(() => {
@@ -372,33 +384,125 @@ export default function LinksPage() {
                 {config?.show_video && config?.video_url && (
                   <div className="mb-8 w-full">
                     <p className="text-[0.65rem] font-body font-bold text-[#82824E] tracking-widest uppercase text-center mb-3 flex items-center justify-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#82824E] animate-pulse" />
                       Destaque do Instagram
                     </p>
                     <Link
                       href={config.video_redirect_url || "https://www.instagram.com/p/DYnJV9XJcQS/"}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="block relative w-full aspect-[4/3] rounded-2xl overflow-hidden border border-[#E5E0DA] shadow-sm hover:shadow-md transition-all duration-300 group cursor-pointer"
+                      className="block relative w-full aspect-[4/5] rounded-2xl overflow-hidden border border-[#E5E0DA] bg-gradient-to-br from-[#FAF9F5] to-[#E5E0DA] shadow-sm hover:shadow-md transition-all duration-300 group cursor-pointer"
                     >
-                      {/* Video HTML5 */}
-                      <video
-                        ref={videoRef}
-                        src={config.video_url}
-                        autoPlay
-                        muted
-                        playsInline
-                        onTimeUpdate={handleTimeUpdate}
-                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      />
+                      {/* Estado de Carregamento Premium (Spinner) */}
+                      {videoLoading && !videoError && (
+                        <div className="absolute inset-0 bg-[#FAFAF7]/50 backdrop-blur-[2px] z-20 flex flex-col items-center justify-center pointer-events-none">
+                          <div className="w-8 h-8 rounded-full border-2 border-[#82824E]/20 border-t-[#82824E] animate-spin mb-2" />
+                          <span className="text-[9px] font-body font-bold text-[#82824E] tracking-widest uppercase">Carregando...</span>
+                        </div>
+                      )}
 
-                      {/* Barra de Progresso Estilo Stories (Fina e elegante no topo) */}
-                      <div className="absolute top-3 left-3 right-3 h-[3px] bg-black/20 rounded-full overflow-hidden z-20">
-                        <div
-                          className="h-full bg-white transition-all duration-100 ease-linear"
-                          style={{ width: `${videoProgress}%` }}
+                      {/* Estado de Erro / Fallback de Rede Magnífico (Capa Poster Cheia) */}
+                      {videoError && (
+                        <div className="absolute inset-0 z-20 w-full h-full bg-gradient-to-br from-[#FAF9F5] to-[#E3E0D8]">
+                          {/* Imagem de Capa Cheia */}
+                          <Image
+                            src="/poster-link.png"
+                            alt="Capa do destaque no Instagram"
+                            fill
+                            priority
+                            className="object-cover transition-transform duration-700 group-hover:scale-105"
+                          />
+                          {/* Overlay escuro sutil para garantir legibilidade do Header */}
+                          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/35 pointer-events-none" />
+
+                          {/* Ícone de Play central estilizado em vidro */}
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <span className="w-14 h-14 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-[#82824E] shadow-lg border border-white/20 transform scale-100 group-hover:scale-110 transition-all duration-300 animate-pulse">
+                              <Play className="w-6 h-6 ml-1 fill-[#82824E] text-[#82824E]" />
+                            </span>
+                          </div>
+
+                          {/* Tag flutuante inferior estilo legenda */}
+                          <div className="absolute bottom-3 left-3 right-3 bg-black/40 backdrop-blur-md border border-white/10 rounded-xl p-2.5 flex items-center justify-between text-white text-[10px] font-semibold tracking-wide shadow-sm">
+                            <span>Assistir no Instagram</span>
+                            <Instagram className="w-4 h-4 text-white" />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Video HTML5 */}
+                      {!videoError && (
+                        <video
+                          ref={videoRef}
+                          src={config.video_url}
+                          poster="/poster-link.png"
+                          autoPlay
+                          muted={isMuted}
+                          playsInline
+                          onTimeUpdate={handleTimeUpdate}
+                          onLoadedData={() => setVideoLoading(false)}
+                          onPlay={() => setVideoLoading(false)}
+                          onWaiting={() => setVideoLoading(true)}
+                          onPlaying={() => setVideoLoading(false)}
+                          onError={() => { setVideoError(true); setVideoLoading(false); }}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-102"
                         />
-                      </div>
+                      )}
+
+                      {/* Header do Instagram Estilo Reels */}
+                      {!videoError && (
+                        <div className="absolute top-0 left-0 right-0 h-16 bg-gradient-to-b from-black/60 via-black/30 to-transparent p-3 flex items-center justify-between z-20 pointer-events-none select-none">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full border border-white/35 overflow-hidden bg-white/10 relative">
+                              <Image
+                                src={config?.avatar_url || "/perfil-links.png"}
+                                alt="Avatar"
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                            <div className="flex flex-col text-left">
+                              <span className="text-[11px] font-semibold text-white tracking-wide drop-shadow-sm flex items-center gap-1">
+                                dalilalucena
+                                <span className="w-3.5 h-3.5 bg-blue-500 rounded-full flex items-center justify-center inline-flex">
+                                  <svg viewBox="0 0 24 24" fill="none" className="w-2 h-2 text-white stroke-[3.5]" stroke="currentColor">
+                                    <path d="M20 6L9 17L4 12" strokeLinecap="round" strokeLinejoin="round" />
+                                  </svg>
+                                </span>
+                              </span>
+                              <span className="text-[7.5px] text-white/80 tracking-widest uppercase font-bold drop-shadow-sm">Destaque</span>
+                            </div>
+                          </div>
+
+                          <div className="w-7 h-7 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center text-white/90 border border-white/15 shadow-sm">
+                            <Instagram className="w-3.5 h-3.5" />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Barra de Progresso Estilo Stories (Fina e flutuante abaixo do header) */}
+                      {!videoError && (
+                        <div className="absolute top-13 left-3 right-3 h-[2.5px] bg-white/25 backdrop-blur-[1px] rounded-full overflow-hidden z-20 pointer-events-none select-none">
+                          <div
+                            className="h-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.7)] transition-all duration-100 ease-linear"
+                            style={{ width: `${videoProgress}%` }}
+                          />
+                        </div>
+                      )}
+
+                      {/* Botão de Som Mute/Unmute flutuante no canto inferior direito */}
+                      {!videoEnded && !videoError && !videoLoading && (
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                          type="button"
+                          onClick={toggleMute}
+                          className="absolute bottom-3 right-3 w-8 h-8 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white/90 hover:bg-black/55 transition-all z-20 shadow-md"
+                          title={isMuted ? "Ativar som" : "Desativar som"}
+                        >
+                          {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+                        </motion.button>
+                      )}
 
                       {/* Overlay Premium ao Fim dos 10 Segundos */}
                       <AnimatePresence>
@@ -407,35 +511,34 @@ export default function LinksPage() {
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
-                            className="absolute inset-0 bg-[#2E2B33]/50 backdrop-blur-[4px] z-30 flex flex-col items-center justify-center p-6 text-center"
+                            className="absolute inset-0 bg-[#1A181D]/65 backdrop-blur-[6px] z-30 flex flex-col items-center justify-center p-6 text-center"
                           >
-                            {/* Ícone Pulsante do Instagram */}
                             <motion.div
-                              animate={{ scale: [1, 1.08, 1] }}
-                              transition={{ duration: 1.5, repeat: Infinity }}
-                              className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-[#6926D5] mb-3 shadow-md"
+                              animate={{ scale: [1, 1.05, 1], rotate: [0, 1.5, -1.5, 0] }}
+                              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                              className="w-14 h-14 rounded-full bg-gradient-to-tr from-[#FFB703] via-[#D62246] to-[#4B1E96] flex items-center justify-center text-white mb-4 shadow-[0_8px_25px_rgba(214,34,70,0.3)] border border-white/10"
                             >
-                              <Instagram className="w-6 h-6" />
+                              <Instagram className="w-7 h-7" />
                             </motion.div>
 
-                            <h4 className="text-white font-heading text-sm font-semibold tracking-wide mb-1">
-                              Quer ver mais?
+                            <h4 className="text-white font-heading text-base font-bold tracking-wide mb-1.5">
+                              Quer ver a publicação?
                             </h4>
-                            <p className="text-white/80 font-body text-[0.68rem] max-w-[200px] leading-relaxed mb-4">
-                              Assista ao vídeo completo e interativo no nosso Instagram.
+                            <p className="text-white/80 font-body text-[0.72rem] max-w-[220px] leading-relaxed mb-5 font-medium">
+                              Assista ao vídeo completo e leia a legenda detalhada diretamente no nosso perfil.
                             </p>
 
-                            <div className="flex items-center gap-2">
-                              <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#82824E] to-[#5E5E39] text-white text-[0.7rem] px-3.5 py-2 rounded-xl font-bold hover:shadow-lg transition-all scale-100 hover:scale-105">
+                            <div className="flex items-center gap-2.5">
+                              <span className="inline-flex items-center gap-1.5 bg-gradient-to-r from-[#82824E] to-[#5E5E39] text-white text-[0.72rem] px-4 py-2.5 rounded-xl font-bold shadow-[0_4px_15px_rgba(130,130,78,0.3)] hover:shadow-[0_6px_20px_rgba(130,130,78,0.4)] transition-all scale-100 hover:scale-105">
                                 Ver no Instagram
                               </span>
                               <button
                                 type="button"
                                 onClick={handlePlayAgain}
-                                className="w-8 h-8 rounded-xl bg-white/20 border border-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-all z-40"
+                                className="w-9 h-9 rounded-xl bg-white/15 border border-white/15 flex items-center justify-center text-white hover:bg-white/25 transition-all z-40 shadow-sm"
                                 title="Repetir preview"
                               >
-                                <RotateCcw className="w-4 h-4" />
+                                <RotateCcw className="w-4.5 h-4.5" />
                               </button>
                             </div>
                           </motion.div>
@@ -443,10 +546,10 @@ export default function LinksPage() {
                       </AnimatePresence>
 
                       {/* Overlay sutil de Hover no player */}
-                      {!videoEnded && (
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-300 z-10 flex items-center justify-center">
-                          <span className="w-10 h-10 rounded-full bg-white/85 flex items-center justify-center text-[#82824E] shadow opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-                            <Play className="w-4 h-4 ml-0.5 fill-[#82824E]" />
+                      {!videoEnded && !videoError && !videoLoading && (
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-300 z-10 flex items-center justify-center">
+                          <span className="w-10 h-10 rounded-full bg-white/90 flex items-center justify-center text-[#82824E] shadow-md opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                            <Play className="w-4 h-4 ml-0.5 fill-[#82824E] text-[#82824E]" />
                           </span>
                         </div>
                       )}

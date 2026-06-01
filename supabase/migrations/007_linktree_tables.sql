@@ -1,3 +1,7 @@
+-- Drop existing tables to ensure clean recreation (especially due to new video columns)
+DROP TABLE IF EXISTS public.linktree_links CASCADE;
+DROP TABLE IF EXISTS public.linktree_config CASCADE;
+
 -- Create linktree_config table
 CREATE TABLE IF NOT EXISTS public.linktree_config (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
