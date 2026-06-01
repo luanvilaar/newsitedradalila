@@ -6,12 +6,13 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Public routes that don't require auth
-  const publicRoutes = ["/", "/login", "/recuperar-senha"];
+  const publicRoutes = ["/", "/login", "/recuperar-senha", "/links"];
   const isPublicRoute =
     publicRoutes.includes(pathname) ||
     pathname.startsWith("/api/auth") ||
     pathname.startsWith("/_next") ||
-    pathname.startsWith("/img");
+    pathname.startsWith("/img") ||
+    (pathname === "/api/admin/links" && request.method === "GET");
 
   // Skip Supabase entirely if credentials are not configured
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
